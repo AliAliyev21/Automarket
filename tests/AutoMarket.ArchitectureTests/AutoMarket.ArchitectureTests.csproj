@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="TngTech.ArchUnitNET.xUnitV3" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\BuildingBlocks\AutoMarket.BuildingBlocks\AutoMarket.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\src\BuildingBlocks\AutoMarket.BuildingBlocks.Web\AutoMarket.BuildingBlocks.Web.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\AutoMarket.Identity\AutoMarket.Identity.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\AutoMarket.Identity.Contracts\AutoMarket.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Catalog\AutoMarket.Catalog\AutoMarket.Catalog.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Catalog\AutoMarket.Catalog.Contracts\AutoMarket.Catalog.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Listings\AutoMarket.Listings\AutoMarket.Listings.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Listings\AutoMarket.Listings.Contracts\AutoMarket.Listings.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Search\AutoMarket.Search\AutoMarket.Search.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Search\AutoMarket.Search.Contracts\AutoMarket.Search.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Moderation\AutoMarket.Moderation\AutoMarket.Moderation.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Moderation\AutoMarket.Moderation.Contracts\AutoMarket.Moderation.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Engagement\AutoMarket.Engagement\AutoMarket.Engagement.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Engagement\AutoMarket.Engagement.Contracts\AutoMarket.Engagement.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Messaging\AutoMarket.Messaging\AutoMarket.Messaging.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Messaging\AutoMarket.Messaging.Contracts\AutoMarket.Messaging.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Notifications\AutoMarket.Notifications\AutoMarket.Notifications.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Notifications\AutoMarket.Notifications.Contracts\AutoMarket.Notifications.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

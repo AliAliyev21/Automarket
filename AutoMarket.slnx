@@ -1,0 +1,46 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/AutoMarket.BuildingBlocks.Web/AutoMarket.BuildingBlocks.Web.csproj" />
+    <Project Path="src/BuildingBlocks/AutoMarket.BuildingBlocks/AutoMarket.BuildingBlocks.csproj" />
+  </Folder>
+  <Folder Name="/src/Host/">
+    <Project Path="src/Host/AutoMarket.Api/AutoMarket.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Catalog/">
+    <Project Path="src/Modules/Catalog/AutoMarket.Catalog.Contracts/AutoMarket.Catalog.Contracts.csproj" />
+    <Project Path="src/Modules/Catalog/AutoMarket.Catalog/AutoMarket.Catalog.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Engagement/">
+    <Project Path="src/Modules/Engagement/AutoMarket.Engagement.Contracts/AutoMarket.Engagement.Contracts.csproj" />
+    <Project Path="src/Modules/Engagement/AutoMarket.Engagement/AutoMarket.Engagement.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Identity/">
+    <Project Path="src/Modules/Identity/AutoMarket.Identity.Contracts/AutoMarket.Identity.Contracts.csproj" />
+    <Project Path="src/Modules/Identity/AutoMarket.Identity/AutoMarket.Identity.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Listings/">
+    <Project Path="src/Modules/Listings/AutoMarket.Listings.Contracts/AutoMarket.Listings.Contracts.csproj" />
+    <Project Path="src/Modules/Listings/AutoMarket.Listings/AutoMarket.Listings.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Messaging/">
+    <Project Path="src/Modules/Messaging/AutoMarket.Messaging.Contracts/AutoMarket.Messaging.Contracts.csproj" />
+    <Project Path="src/Modules/Messaging/AutoMarket.Messaging/AutoMarket.Messaging.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Moderation/">
+    <Project Path="src/Modules/Moderation/AutoMarket.Moderation.Contracts/AutoMarket.Moderation.Contracts.csproj" />
+    <Project Path="src/Modules/Moderation/AutoMarket.Moderation/AutoMarket.Moderation.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notifications/">
+    <Project Path="src/Modules/Notifications/AutoMarket.Notifications.Contracts/AutoMarket.Notifications.Contracts.csproj" />
+    <Project Path="src/Modules/Notifications/AutoMarket.Notifications/AutoMarket.Notifications.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Search/">
+    <Project Path="src/Modules/Search/AutoMarket.Search.Contracts/AutoMarket.Search.Contracts.csproj" />
+    <Project Path="src/Modules/Search/AutoMarket.Search/AutoMarket.Search.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AutoMarket.ArchitectureTests/AutoMarket.ArchitectureTests.csproj" />
+  </Folder>
+</Solution>

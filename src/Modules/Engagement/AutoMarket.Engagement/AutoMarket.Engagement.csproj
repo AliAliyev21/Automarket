@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="AutoMarket.Engagement.UnitTests" />
+    <InternalsVisibleTo Include="AutoMarket.IntegrationTests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\AutoMarket.BuildingBlocks\AutoMarket.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\AutoMarket.BuildingBlocks.Web\AutoMarket.BuildingBlocks.Web.csproj" />
+    <ProjectReference Include="..\AutoMarket.Engagement.Contracts\AutoMarket.Engagement.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

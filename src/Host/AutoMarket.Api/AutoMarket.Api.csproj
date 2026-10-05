@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\BuildingBlocks\AutoMarket.BuildingBlocks.Web\AutoMarket.BuildingBlocks.Web.csproj" />
+    <ProjectReference Include="..\..\Modules\Identity\AutoMarket.Identity\AutoMarket.Identity.csproj" />
+    <ProjectReference Include="..\..\Modules\Catalog\AutoMarket.Catalog\AutoMarket.Catalog.csproj" />
+    <ProjectReference Include="..\..\Modules\Listings\AutoMarket.Listings\AutoMarket.Listings.csproj" />
+    <ProjectReference Include="..\..\Modules\Search\AutoMarket.Search\AutoMarket.Search.csproj" />
+    <ProjectReference Include="..\..\Modules\Moderation\AutoMarket.Moderation\AutoMarket.Moderation.csproj" />
+    <ProjectReference Include="..\..\Modules\Engagement\AutoMarket.Engagement\AutoMarket.Engagement.csproj" />
+    <ProjectReference Include="..\..\Modules\Messaging\AutoMarket.Messaging\AutoMarket.Messaging.csproj" />
+    <ProjectReference Include="..\..\Modules\Notifications\AutoMarket.Notifications\AutoMarket.Notifications.csproj" />
+  </ItemGroup>
+
+</Project>
