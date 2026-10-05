@@ -981,6 +981,7 @@ Seçim qaydası: lisenziyası açıq və pulsuz olanlara üstünlük verilir. M�
 | `Scalar.AspNetCore` | MIT | OpenAPI UI (yalnız Development/Staging) | |
 | `Serilog`, `Serilog.AspNetCore`, `Serilog.Formatting.Compact`, `Serilog.Sinks.Console`, `Serilog.Sinks.Seq` | Apache 2.0 | logging | [ADR-0013](adr/0013-logging-and-observability.md) |
 | `OpenTelemetry.*` | Apache 2.0 | traces, metrics | |
+| `Microsoft.CodeAnalysis.BannedApiAnalyzers` | MIT | build zamanı qadağan olunmuş API-lərin yoxlanması (`BannedSymbols.txt`): `DateTime.UtcNow`, `Guid.NewGuid`, `FromSqlRaw` və s. (§7.2 SEC-INP-04, §8.9) | yalnız analyzer, runtime asılılığı yoxdur (`PrivateAssets=all`). Qaydalar [CONVENTIONS §1.1](CONVENTIONS.md#11-directorybuildprops-repo-kökü) |
 | Test: `xunit.v3` | Apache 2.0 | test framework | |
 | Test: `Testcontainers.*` | MIT | konteynerlər | |
 | Test: `Shouldly` | BSD-3-Clause | assertion | FluentAssertions əvəzinə |
