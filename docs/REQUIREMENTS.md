@@ -2,7 +2,7 @@
 
 | Sahə | Dəyər |
 |---|---|
-| Versiya | 0.2 (qaralama) |
+| Versiya | 0.3 (qaralama) |
 | Tarix | 2026-10-05 |
 | Status | Açıq suallar üzrə qərarlar qəbul edilib (bax: 6), review gözləyir |
 | Əhatə | MVP, backend Web API (C# / .NET 10) |
@@ -407,7 +407,7 @@ Sistem sahələri (client tərəfindən təyin edilə bilməz): id, sahib, statu
 - AC4. Eyni (saxlanmış axtarış, elan) cütü üçün bildiriş yalnız bir dəfə yaradılır (idempotentlik).
 - AC5. `instant` rejimində bildiriş ən gec 15 dəqiqəyə göndərilir. `daily` rejimində gündə bir dəfə, Bakı vaxtı ilə 09:00-da toplu məktub göndərilir. Digest-də hər axtarış üçün ən çox 20 elan olur, qalanları üçün "daha çox" linki verilir.
 - AC6. `instant` rejimində bir istifadəçiyə saatda ən çox 10 email göndərilir. Limitdən artıq bildirişlər növbəti digest-ə keçir.
-- AC7. Hər email-də bir kliklə abunəlikdən çıxma linki var. Link həmin saxlanmış axtarışı `off` edir və login tələb etmir; bunun üçün imzalı, vaxtı məhdud token istifadə olunur.
+- AC7. Hər email-də bir kliklə abunəlikdən çıxma linki var. Link həmin saxlanmış axtarışı `off` edir və login tələb etmir. Bunun üçün SEC-AUTH-07-yə uyğun token istifadə olunur: kriptoqrafik təsadüfi dəyərdir, serverdə yalnız hash-i saxlanılır, vaxtı məhduddur. Təkrar istifadə xəta vermir (əməliyyat idempotentdir) (Q22).
 - AC8. Email göndərmə uğursuz olarsa, təkrar cəhd edilir (eksponensial gecikmə ilə, ən çox 5 dəfə). Bu, elanın təsdiqlənməsi əməliyyatını bloklamamalıdır.
 
 #### FR-NOTIF-02 In-app bildirişlər
@@ -490,7 +490,7 @@ OWASP API Security Top 10 (2023) ilə uyğunluq cədvəli bölmənin sonundadır
   - məcburi kompozisiya qaydası yoxdur ("1 böyük hərf + 1 rəqəm" kimi); bunun əvəzinə şifrə ən çox istifadə olunan / sızmış şifrələr siyahısında (ən azı top 100 000) olmamalıdır. Yoxlama yalnız serverdə saxlanılan lokal siyahı ilə aparılır, şifrə və ya onun hash-i (prefiksi də daxil olmaqla) xarici servisə göndərilmir (Q1);
   - şifrə email-ə və ya istifadəçi adına bərabər və ya onu ehtiva edən ola bilməz;
   - dövri məcburi dəyişmə tələb olunmur.
-- **SEC-AUTH-02 Şifrə hash-i**: şifrələr yalnız adaptiv, salt-lı hash ilə saxlanılır. Minimum: Argon2id (m ≥ 19 MiB, t ≥ 2, p = 1) və ya PBKDF2-HMAC-SHA256 (≥ 600 000 iterasiya), hər istifadəçi üçün unikal salt. Parametrlər versiyalanır ki, login zamanı rehash etmək mümkün olsun. Şifrə heç vaxt açıq və ya geri çevrilə bilən şəkildə saxlanılmır.
+- **SEC-AUTH-02 Şifrə hash-i**: şifrələr yalnız adaptiv, salt-lı hash ilə saxlanılır. Minimum: Argon2id (m ≥ 19 MiB, t ≥ 2, p = 1), PBKDF2-HMAC-SHA512 (≥ 210 000 iterasiya) və ya PBKDF2-HMAC-SHA256 (≥ 600 000 iterasiya), hər istifadəçi üçün unikal salt (Q23). Parametrlər versiyalanır ki, login zamanı rehash etmək mümkün olsun. Şifrə heç vaxt açıq və ya geri çevrilə bilən şəkildə saxlanılmır.
 - **SEC-AUTH-03 Lockout**: hesab üzrə 15 dəqiqədə 5 ardıcıl uğursuz cəhddən sonra hesab 15 dəqiqəlik kilidlənir. Hər növbəti lockout müddəti ikiqat artır (ən çox 24 saat). Uğurlu login sayğacı sıfırlayır. Lockout istifadəçiyə email ilə bildirilir. Lockout IP əsaslı rate limit-dən (SEC-RATE) ayrıdır, ikisi birlikdə tətbiq olunur.
 - **SEC-AUTH-04 Access token**: ömrü 15 dəqiqə; imzalanmış, imza alqoritmi serverdə sabit təyin olunub (`none` və alqoritm dəyişdirmə qəbul edilmir). İçində yalnız minimum claim-lər olur (istifadəçi id, rollar, token id, issuer, audience, exp); şəxsi məlumat (email, telefon) olmur. Hər sorğuda issuer, audience, müddət və imza yoxlanılır; saat sürüşməsi (clock skew) ≤ 30 saniyə.
 - **SEC-AUTH-05 Refresh token**: təsadüfi (≥ 256 bit), opaque dəyərdir, serverdə yalnız hash-i saxlanılır. Ömrü 14 gün (sliding), mütləq maksimum 60 gün (Q3). Client-ə ötürülmə qaydası SEC-NET-04-də verilib. Hər istifadədə rotation edilir, reuse aşkarlananda bütün token ailəsi ləğv edilir (FR-AUTH-04). Logout, şifrə dəyişmə, bloklanma, hesabın silinməsi və rolun azaldılması tokenləri ləğv edir. Bir istifadəçinin eyni vaxtda ən çox 10 aktiv sessiyası ola bilər; ən köhnəsi avtomatik ləğv edilir.
@@ -588,7 +588,18 @@ Bütün limitlər konfiqurasiyadan oxunur. Limit aşılarsa `429 Too Many Reques
 - **SEC-ERR-04**: xəta kodlarının siyahısı API sənədində saxlanılır və versiyalanır. Mövcud kodun mənasını dəyişmək breaking change sayılır.
 
 Xəta kodlarının başlanğıc siyahısı (tam deyil):
-`VALIDATION_FAILED`, `UNAUTHORIZED`, `FORBIDDEN`, `INVALID_CREDENTIALS`, `EMAIL_NOT_CONFIRMED`, `ACCOUNT_BLOCKED`, `ACCOUNT_LOCKED_OUT`, `TOKEN_INVALID_OR_EXPIRED`, `REFRESH_TOKEN_REUSED`, `LISTING_NOT_FOUND`, `THREAD_NOT_FOUND`, `INVALID_STATUS_TRANSITION`, `LISTING_UNDER_REVIEW`, `ACTIVE_LISTING_LIMIT_REACHED`, `IMAGE_LIMIT_REACHED`, `IMAGE_MIN_REQUIRED`, `IMAGE_INVALID`, `IMAGE_TOO_LARGE`, `SAVED_SEARCH_LIMIT_REACHED`, `USER_BLOCKED_YOU`, `CONCURRENCY_CONFLICT`, `RATE_LIMITED`, `INTERNAL_ERROR`.
+`VALIDATION_FAILED`, `UNAUTHORIZED`, `FORBIDDEN`, `INVALID_CREDENTIALS`, `EMAIL_NOT_CONFIRMED`, `ACCOUNT_BLOCKED`, `ACCOUNT_LOCKED_OUT`, `TOKEN_INVALID_OR_EXPIRED`, `REFRESH_TOKEN_REUSED`, `LISTING_NOT_FOUND`, `THREAD_NOT_FOUND`, `INVALID_STATUS_TRANSITION`, `LISTING_UNDER_REVIEW`, `ACTIVE_LISTING_LIMIT_REACHED`, `IMAGE_LIMIT_REACHED`, `IMAGE_MIN_REQUIRED`, `IMAGE_INVALID`, `IMAGE_TOO_LARGE`, `SAVED_SEARCH_LIMIT_REACHED`, `USER_BLOCKED_YOU`, `CONCURRENCY_CONFLICT`, `RATE_LIMITED`, `INTERNAL_ERROR`, `PHONE_NOT_AVAILABLE`, `PAYLOAD_TOO_LARGE`, `UNSUPPORTED_MEDIA_TYPE`, `DRAFT_LIMIT_REACHED`, `FAVORITES_LIMIT_REACHED`, `ALREADY_REPORTED` (Q24).
+
+Əlavə olunan kodların mənası (Q24):
+
+| Kod | HTTP | Nə vaxt |
+|---|---|---|
+| `PHONE_NOT_AVAILABLE` | 404 | Active elanın satıcısının telefonu yoxdur (FR-LST-06 AC2) |
+| `PAYLOAD_TOO_LARGE` | 413 | Request body ölçü limitini aşır (SEC-INP-02, SEC-FILE-02). Tək şəkil faylının limiti aşması `IMAGE_TOO_LARGE` ilə qaytarılır |
+| `UNSUPPORTED_MEDIA_TYPE` | 415 | İcazə verilməyən `Content-Type` (SEC-INP-07) |
+| `DRAFT_LIMIT_REACHED` | 409 | Draft sayı limiti aşılıb (FR-LST-01 AC3) |
+| `FAVORITES_LIMIT_REACHED` | 409 | Seçilmişlərin sayı limiti aşılıb (FR-FAV-01 AC2) |
+| `ALREADY_REPORTED` | 409 | İstifadəçi bu elandan artıq şikayət edib (FR-MOD-03 AC2) |
 
 ### 4.9 Logging və audit
 
@@ -768,7 +779,7 @@ Hədəf yük (MVP): **50 000 aktiv elan**, **pik 100 RPS** (oxumaların ~80%-i a
 
 ## 6. Qəbul edilmiş qərarlar
 
-Əvvəlki "Açıq suallar" bölməsindəki suallar 2026-10-05 tarixində bağlanıb. Q2 və Q5 üzrə qərarları məhsul sahibi verib, qalan suallarda təklif olunan default dəyərlər qəbul edilib. Identifikatorlar (Q1–Q21) sənəddəki istinadlar üçün saxlanılıb.
+Əvvəlki "Açıq suallar" bölməsindəki suallar 2026-10-05 tarixində bağlanıb. Q2 və Q5 üzrə qərarları məhsul sahibi verib, qalan suallarda təklif olunan default dəyərlər qəbul edilib. Identifikatorlar (Q1–Q21) sənəddəki istinadlar üçün saxlanılıb. Q22–Q24 arxitektura sənədinin ([ARCHITECTURE.md](ARCHITECTURE.md)) review-u zamanı əlavə olunub.
 
 | # | Mövzu | Qərar | Tətbiq olunduğu yer |
 |---|---|---|---|
@@ -793,3 +804,6 @@ Hədəf yük (MVP): **50 000 aktiv elan**, **pik 100 RPS** (oxumaların ~80%-i a
 | Q19 | Email şablonlarının dili | az + en (hər məktub hər iki dildə) | NFR-ENV-05 |
 | Q20 | Telefon nömrəsinin formatı | Yalnız `+994XXXXXXXXX` | FR-AUTH-01 AC1, FR-ACC-01 AC1 |
 | Q21 | Production hosting, fayl saxlama yeri, email provayderi | Arxitektura sənədində qərar veriləcək | — |
+| Q22 | Abunəlikdən çıxma tokeni (arxitektura review-u, 2026-10-05) | İmzalı token əvəzinə SEC-AUTH-07 variantı istifadə olunur: təsadüfi token, serverdə yalnız hash-i saxlanılır | FR-NOTIF-01 AC7 |
+| Q23 | Şifrə hash alqoritmi (arxitektura review-u, 2026-10-05) | ASP.NET Core Identity-nin standart `PasswordHasher`-i: PBKDF2-HMAC-SHA512, 210 000 iterasiya (OWASP tövsiyəsi) | SEC-AUTH-02 |
+| Q24 | Əlavə xəta kodları (arxitektura review-u, 2026-10-05) | `PHONE_NOT_AVAILABLE`, `PAYLOAD_TOO_LARGE`, `UNSUPPORTED_MEDIA_TYPE`, `DRAFT_LIMIT_REACHED`, `FAVORITES_LIMIT_REACHED`, `ALREADY_REPORTED` | 4.8 |
