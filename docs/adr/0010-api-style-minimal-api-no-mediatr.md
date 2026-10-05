@@ -14,7 +14,7 @@ API-nin nəqliyyat qatı, use case-lərin çağırılması, input validasiyası 
 
 ## Qərar
 
-1. **Minimal API.** Hər modul `<M>Module.MapEndpoints(IEndpointRouteBuilder)` metodunda öz route qrupunu (`MapGroup("/api/v{version:apiVersion}/listings")`) qeyd edir. Endpoint-lər `Api/` qovluğunda feature-lərə görə qruplaşdırılır (`Api/Listings/CreateListingEndpoint.cs`). Hər endpoint-də açıq şəkildə authorization policy (və ya `AllowAnonymous`), rate limit policy, `Produces`/`ProducesProblem` metadata-sı göstərilir.
+1. **Minimal API.** Hər modul `<M>Module.Map<M>Endpoints(IEndpointRouteBuilder)` metodunda öz route qrupunu (`MapGroup("/api/v{version:apiVersion}/listings")`) qeyd edir. Endpoint-lər `Api/` qovluğunda feature-lərə görə qruplaşdırılır (`Api/Listings/CreateListingEndpoint.cs`). Hər endpoint-də açıq şəkildə authorization policy (və ya `AllowAnonymous`), rate limit policy, `Produces`/`ProducesProblem` metadata-sı göstərilir.
 2. **Mediator yoxdur.** Use case-lər sadə interfeyslərdir: `ICommandHandler<TCommand, TResult>`, `IQueryHandler<TQuery, TResult>` (`BuildingBlocks.Application`-da). Handler-lər DI ilə birbaşa endpoint-ə inject olunur. Cross-cutting davranışlar (validation, transaksiya, logging) mediator pipeline-ı ilə deyil, aşağıdakı yollarla həll olunur:
    - validation — endpoint filter (`ValidationFilter<T>`);
    - transaksiya — handler daxilində `DbContext.SaveChangesAsync` (bir modul, bir transaksiya), outbox interceptor ilə;

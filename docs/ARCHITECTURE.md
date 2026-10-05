@@ -983,6 +983,7 @@ Seçim qaydası: lisenziyası açıq və pulsuz olanlara üstünlük verilir. M�
 | `OpenTelemetry.*` | Apache 2.0 | traces, metrics | |
 | `Microsoft.CodeAnalysis.BannedApiAnalyzers` | MIT | build zamanı qadağan olunmuş API-lərin yoxlanması (`BannedSymbols.txt`): `DateTime.UtcNow`, `Guid.NewGuid`, `FromSqlRaw` və s. (§7.2 SEC-INP-04, §8.9) | yalnız analyzer, runtime asılılığı yoxdur (`PrivateAssets=all`). Qaydalar [CONVENTIONS §1.1](CONVENTIONS.md#11-directorybuildprops-repo-kökü) |
 | Test: `xunit.v3` | Apache 2.0 | test framework | |
+| Test: `Microsoft.NET.Test.Sdk` (MIT), `xunit.runner.visualstudio` (Apache 2.0) | MIT / Apache 2.0 | test runner (`dotnet test`, VSTest) | xUnit v3 4.x yalnız Microsoft.Testing.Platform v2 ilə işləyir. VSTest saxlanıldığı müddətdə `xunit.v3` 3.x istifadə olunur. Paketlər 2026-10-05 təsdiq olunub |
 | Test: `Testcontainers.*` | MIT | konteynerlər | |
 | Test: `Shouldly` | BSD-3-Clause | assertion | FluentAssertions əvəzinə |
 | Test: `NSubstitute` | BSD-3-Clause | mock | |
