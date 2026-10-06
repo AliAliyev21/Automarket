@@ -12,8 +12,13 @@ public sealed class LayerTests
     [MemberData(nameof(Modules), MemberType = typeof(AutoMarketArchitecture))]
     public void Domain_Dependencies_ShouldNotDependOnOtherLayersOrFrameworks(string module)
     {
+        // Yeganə istisna (ARCHITECTURE §10.4, ADR-0003): Identity.Domain-də User/Role Identity Core-un EF store-ları üçün
+        // IdentityUser/IdentityRole-dan törəyir. Microsoft.AspNetCore.Identity EF Core-dan və HTTP-dən asılı deyil
+        var aspNetCore = module == "Identity"
+            ? @"Microsoft\.AspNetCore(?!\.Identity(\.|$))"
+            : @"Microsoft\.AspNetCore";
         var forbidden =
-            $@"^(AutoMarket\.{module}\.(Application|Infrastructure|Api)|Microsoft\.EntityFrameworkCore|Microsoft\.AspNetCore|RabbitMQ)(\..+)?$";
+            $@"^(AutoMarket\.{module}\.(Application|Infrastructure|Api)|Microsoft\.EntityFrameworkCore|{aspNetCore}|RabbitMQ)(\..+)?$";
 
         Types().That().ResideInNamespaceMatching(NamespaceTree($"AutoMarket.{module}.Domain"))
             .Should().NotDependOnAnyTypesThat().ResideInNamespaceMatching(forbidden)

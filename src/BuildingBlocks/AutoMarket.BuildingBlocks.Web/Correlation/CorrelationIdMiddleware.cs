@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using AutoMarket.BuildingBlocks.Application;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -16,6 +17,9 @@ public sealed class CorrelationIdMiddleware(RequestDelegate next, ILogger<Correl
             : CreateCorrelationId();
 
         context.Items[CorrelationIdFormat.ItemKey] = correlationId;
+
+        // Outbox envelope-u və audit qeydi correlation id-ni buradan oxuyur (ARCHITECTURE §8.4)
+        CorrelationContext.Current = correlationId;
 
         // Header OnStarting-də yazılır: exception handler cavabı təmizləsə də header qalır
         context.Response.OnStarting(() =>

@@ -62,7 +62,21 @@ dotnet user-secrets list --project src/Host/AutoMarket.Api
 
 Tətbiq startup-da konfiqurasiyanı yoxlayır (`ValidateOnStart`): dəyər boşdursa, formatı səhvdirsə və ya parol placeholder-dirsə (`change-me...`, `<...>`), proses işə düşmür və hansı açarın səhv olduğunu yazır (SEC-SEC-03).
 
-Digər mühitlərdə eyni açarlar environment variable ilə verilir: `AutoMarket__Postgres__ConnectionString`, `AutoMarket__Redis__ConnectionString`, `AutoMarket__RabbitMq__ConnectionString`.
+JWT imza açarı (SEC-SEC-03: ən azı 256 bit, base64). Açarı yaratmaq üçün:
+
+```bash
+openssl rand -base64 32
+```
+
+Alınan dəyəri yazın (`KeyId` `appsettings.json`-dadır, burada yalnız açarın özü verilir):
+
+```bash
+dotnet user-secrets set "Jwt:SigningKeys:0:Key" "<base64 açar>" --project src/Host/AutoMarket.Api
+```
+
+Açar rotasiyası (SEC-SEC-05): `Jwt:SigningKeys` siyahısına `NotBefore` ilə yeni açar əlavə olunur, köhnə açar `RetireAfter` ilə keçid dövründən sonra çıxarılır.
+
+Digər mühitlərdə eyni açarlar environment variable ilə verilir: `AutoMarket__Postgres__ConnectionString`, `AutoMarket__Redis__ConnectionString`, `AutoMarket__RabbitMq__ConnectionString`, `AutoMarket__Jwt__SigningKeys__0__Key`, real SMTP üçün `AutoMarket__Smtp__Host`, `AutoMarket__Smtp__UserName`, `AutoMarket__Smtp__Password`. CORS origin-ləri (`Cors:AllowedOrigins`) və təsdiq linkinin ünvanı (`Notifications:Links:ConfirmEmailUrl`) hər mühit üçün ayrıca verilir.
 
 ### 5. API-ni işə salmaq
 
@@ -70,7 +84,9 @@ Digər mühitlərdə eyni açarlar environment variable ilə verilir: `AutoMarke
 dotnet run --project src/Host/AutoMarket.Api
 ```
 
-Log-lar stdout-a JSON formatında yazılır və Development-də Seq-ə də göndərilir.
+Log-lar stdout-a JSON formatında yazılır və Development-də Seq-ə də göndərilir. Development-də bütün modulların migration-ları startup-da tətbiq olunur (`Database:MigrateOnStartup`).
+
+Auth axınını yoxlamaq üçün: Scalar-da `POST /api/v1/auth/register` → Mailpit-də (`http://localhost:8025`) təsdiq məktubu (az + en) → linkdəki `token` ilə `POST /api/v1/auth/confirm-email` → `POST /api/v1/auth/login` → access token ilə `GET /api/v1/me`. Refresh token yalnız `rt` HttpOnly cookie-dədir və `POST /api/v1/auth/refresh` yalnız `Cors:AllowedOrigins`-dəki `Origin` ilə qəbul olunur.
 
 ### Ünvanlar
 

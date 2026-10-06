@@ -1,3 +1,4 @@
+using AutoMarket.BuildingBlocks.Security;
 using Microsoft.Extensions.Options;
 using Npgsql;
 

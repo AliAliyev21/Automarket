@@ -627,9 +627,9 @@ HTTP metodları: `GET` oxuma (yan təsirsiz), `POST` yaratma və əməliyyat, `P
 | `201 Created` | yaratma: `Location` header + `{ id, version }` |
 | `202 Accepted` | enumeration qorunan auth axınları: register, resend-confirmation, forgot-password (SEC-AUTH-08) |
 | `204 No Content` | body-siz uğur: `DELETE`, confirm-email, idempotent seçilmiş əlavə/çıxarma |
-| `400` | `VALIDATION_FAILED` (+ `errors`), `Validation` növlü domen xətası |
-| `401` | `UNAUTHORIZED`, `INVALID_CREDENTIALS`, `ACCOUNT_BLOCKED` (status middleware), `REFRESH_TOKEN_REUSED` |
-| `403` | `FORBIDDEN` — rol çatmır, `Origin` yoxlaması |
+| `400` | `VALIDATION_FAILED` (+ `errors`), `Validation` növlü domen xətası, `TOKEN_INVALID_OR_EXPIRED` |
+| `401` | `UNAUTHORIZED` (o cümlədən etibarsız və ya vaxtı keçmiş refresh cookie), `INVALID_CREDENTIALS`, `ACCOUNT_BLOCKED` (status middleware), `REFRESH_TOKEN_REUSED` |
+| `403` | `FORBIDDEN` — rol çatmır, `Origin` yoxlaması; `EMAIL_NOT_CONFIRMED`, `ACCOUNT_LOCKED_OUT` (şifrə düzgündür, amma giriş qadağandır) |
 | `404` | `*_NOT_FOUND` — yoxdur **və ya** istifadəçiyə aid deyil (SEC-AUTHZ-02), `PHONE_NOT_AVAILABLE` |
 | `409` | `CONCURRENCY_CONFLICT`, `INVALID_STATUS_TRANSITION`, limitlər (`*_LIMIT_REACHED`), `ALREADY_REPORTED`, `LISTING_UNDER_REVIEW` |
 | `413` / `415` | `PAYLOAD_TOO_LARGE` / `UNSUPPORTED_MEDIA_TYPE` |

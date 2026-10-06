@@ -5,8 +5,21 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- SEC-AUTH-01: top-100k sızmış şifrə siyahısı (SecLists xato-net-10-million-passwords-100000.txt, MIT) -->
+  <ItemGroup>
+    <EmbeddedResource Include="Infrastructure\Passwords\common-passwords.txt" LogicalName="AutoMarket.Identity.CommonPasswords" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="AutoMarket.Identity.UnitTests" />
     <InternalsVisibleTo Include="AutoMarket.IntegrationTests" />
+    <!-- NSubstitute internal port interfeyslərini proxy edə bilsin deyə -->
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
   </ItemGroup>
 
   <ItemGroup>

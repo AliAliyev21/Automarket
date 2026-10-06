@@ -5,6 +5,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="MailKit" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="AutoMarket.Notifications.UnitTests" />
     <InternalsVisibleTo Include="AutoMarket.IntegrationTests" />
   </ItemGroup>
@@ -13,6 +18,7 @@
     <ProjectReference Include="..\..\..\BuildingBlocks\AutoMarket.BuildingBlocks\AutoMarket.BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\AutoMarket.BuildingBlocks.Web\AutoMarket.BuildingBlocks.Web.csproj" />
     <ProjectReference Include="..\AutoMarket.Notifications.Contracts\AutoMarket.Notifications.Contracts.csproj" />
+    <ProjectReference Include="..\..\Identity\AutoMarket.Identity.Contracts\AutoMarket.Identity.Contracts.csproj" />
   </ItemGroup>
 
 </Project>
