@@ -26,4 +26,6 @@ public static class CommonErrors
 
     public static readonly Error UnsupportedMediaType =
         new(ErrorCodes.UnsupportedMediaType, "Unsupported content type.", 415);
+
+    public static Error RateLimitedFor(TimeSpan retryAfter) => RateLimited with { RetryAfter = retryAfter };
 }

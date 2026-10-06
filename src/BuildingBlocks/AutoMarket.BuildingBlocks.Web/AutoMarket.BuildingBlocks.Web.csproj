@@ -5,6 +5,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="StackExchange.Redis" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="AutoMarket.BuildingBlocks.UnitTests" />
+    <InternalsVisibleTo Include="AutoMarket.IntegrationTests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\AutoMarket.BuildingBlocks\AutoMarket.BuildingBlocks.csproj" />
   </ItemGroup>
 

@@ -136,3 +136,7 @@ dotnet_diagnostic.CA1707.severity = none
 dotnet_diagnostic.CA1515.severity = none
 # Test metodlarında Async sonluğu yazılmır (CONVENTIONS §11.2)
 dotnet_naming_rule.async_methods_rule.severity = none
+
+# EF Core migration-ları dotnet ef ilə yaradılır və əl ilə redaktə olunmur (CONVENTIONS §7.2): generated code sayılır
+[src/**/Migrations/*.cs]
+generated_code = true

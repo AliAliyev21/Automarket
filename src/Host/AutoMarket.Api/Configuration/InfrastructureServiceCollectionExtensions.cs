@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using Npgsql;
+using RabbitMQ.Client;
 using StackExchange.Redis;
 
 namespace AutoMarket.Api.Configuration;
@@ -30,6 +31,13 @@ internal static class InfrastructureServiceCollectionExtensions
             options.AbortOnConnectFail = false;
             options.LoggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
             return ConnectionMultiplexer.Connect(options);
+        });
+
+        // Paylaşılan bağlantı BuildingBlocks.Messaging-dəki RabbitMqConnectionProvider tərəfindən açılır (ADR-0005)
+        services.AddSingleton(serviceProvider => new ConnectionFactory
+        {
+            Uri = new Uri(serviceProvider.GetRequiredService<IOptions<RabbitMqOptions>>().Value.ConnectionString),
+            ClientProvidedName = "automarket-api",
         });
 
         return services;

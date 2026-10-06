@@ -368,7 +368,7 @@ flowchart LR
 
 ### 5.4 Integration event-lərin siyahısı
 
-Envelope (bütün event-lər üçün): `messageId (uuid)`, `type` (routing key ilə eyni), `version`, `occurredAt (UTC)`, `correlationId`, `traceparent`, `payload`. Payload-da **şəxsi məlumat minimal saxlanılır**: email, telefon və mesaj mətni event-lərdə olmur. Yeganə istisna `AuthEmailRequested`-dir (aşağıda).
+Envelope (bütün event-lər üçün): `messageId (uuid)`, `type` (routing key ilə eyni), `version`, `occurredAt (UTC)`, `correlationId`, `traceparent`, `payload`. Payload-da **şəxsi məlumat minimal saxlanılır**: email, telefon və mesaj mətni event-lərdə olmur. Yeganə istisna `AuthEmailRequested`-dir (aşağıda): o, alıcının email ünvanını ehtiva edir, çünki Notifications-un ünvanı oxumaq üçün başqa yolu yoxdur və təsdiqlənməmiş istifadəçinin ünvanı `IUserDirectory`-də olmamalıdır (2026-10-06, mərhələ 3a).
 
 | Event (routing key) | Publisher | Payload (əsas sahələr) | Consumer-lər |
 |---|---|---|---|
@@ -380,7 +380,7 @@ Envelope (bütün event-lər üçün): `messageId (uuid)`, `type` (routing key i
 | `identity.user.anonymized.v1` | Identity | userId | Messaging (cache invalidation) |
 | `identity.user.roles-changed.v1` | Identity | userId, roles | — (user status cache-i Identity-nin öz daxilində invalidasiya olunur) |
 | `identity.user.notification-settings-changed.v1` | Identity | userId, expiryEmail, messageEmail | Notifications (cache invalidation) |
-| `identity.auth-email.requested.v1` | Identity | userId, kind (`ConfirmEmail`, `ResetPassword`, `PasswordChanged`, `LockedOut`, `RegistrationAttemptOnExistingAccount`, `AccountDeleted`), `protectedToken` (yalnız link olan məktublarda; Data Protection ilə şifrələnib) | Notifications |
+| `identity.auth-email.requested.v1` | Identity | userId, email, kind (`ConfirmEmail`, `ResetPassword`, `PasswordChanged`, `LockedOut`, `RegistrationAttemptOnExistingAccount`, `AccountDeleted`), `protectedToken` (yalnız link olan məktublarda; Data Protection ilə şifrələnib) | Notifications |
 | `catalog.dictionary-item.changed.v1` | Catalog | dictionaryType, itemId, isActive | Search və Listings (cache tag invalidation) |
 | `catalog.exchange-rates.updated.v1` | Catalog | rateDate, usdAzn, eurAzn | Search (AZN ekvivalentini yenidən hesablamaq), Listings (cache) |
 | `listings.listing.submitted.v1` | Listings | listingId, ownerId, submittedAt, version | Moderation |
@@ -459,7 +459,7 @@ sequenceDiagram
         ID->>DB: köhnə token revoked (replaced_by), yeni token eyni family-də (sliding 14 gün, absolute 60 gün)
         ID-->>U: 200 { accessToken } + yeni Set-Cookie
     else token artıq istifadə olunub (reuse)
-        ID->>DB: family-nin bütün tokenləri revoked, audit REFRESH_TOKEN_REUSED
+        ID->>DB: istifadəçinin bütün aktiv refresh tokenləri revoked (FR-AUTH-04 AC2: bütün sessiyalar), audit REFRESH_TOKEN_REUSED
         ID-->>U: 401 REFRESH_TOKEN_REUSED + cookie silinir
     end
 ```
@@ -923,7 +923,7 @@ Hər PR-da: `dotnet build` (warnings as errors) → unit → architecture → in
 
 | Qayda | Nəyi qoruyur |
 |---|---|
-| `AutoMarket.<M>.Domain` namespace-i `Application`, `Infrastructure`, `Api`, `Microsoft.EntityFrameworkCore`, `Microsoft.AspNetCore`, `RabbitMQ` namespace-lərindən asılı deyil | Domain təmizliyi |
+| `AutoMarket.<M>.Domain` namespace-i `Application`, `Infrastructure`, `Api`, `Microsoft.EntityFrameworkCore`, `Microsoft.AspNetCore`, `RabbitMQ` namespace-lərindən asılı deyil. Yeganə istisna: `AutoMarket.Identity.Domain` → `Microsoft.AspNetCore.Identity` (`User : IdentityUser<Guid>`, `Role : IdentityRole<Guid>`, ADR-0003; bu namespace EF Core-dan və HTTP-dən asılı deyil, 2026-10-06) | Domain təmizliyi |
 | `Application` → `Infrastructure` və `Api`-dən asılı deyil | qat istiqaməti |
 | `Api` → `Infrastructure`-dan asılı deyil | qat istiqaməti |
 | `AutoMarket.<A>.*` tipləri `AutoMarket.<B>.*` (B ≠ A, `Contracts` xaric) tiplərindən asılı deyil | modul sərhədi (proyekt reference-lərinə əlavə ikinci qoruma) |
@@ -976,6 +976,8 @@ Seçim qaydası: lisenziyası açıq və pulsuz olanlara üstünlük verilir. M�
 | `Cronos` | MIT | cron ifadələri | [ADR-0006](adr/0006-background-jobs-hosted-services.md) |
 | `NetVips` + `NetVips.Native` | MIT (wrapper) + LGPL-2.1 (libvips, dinamik link) | şəkil emalı | [ADR-0009](adr/0009-image-processing-netvips.md) |
 | `FluentValidation` | Apache 2.0 | validasiya | [ADR-0010](adr/0010-api-style-minimal-api-no-mediatr.md) |
+| `FluentValidation.DependencyInjectionExtensions` | Apache 2.0 | validator-ların assembly scan ilə qeydiyyatı | FluentValidation-ın öz paketi, 2026-10-06 təsdiq olunub |
+| Data: SecLists `xato-net-10-million-passwords-100000.txt` | MIT | SEC-AUTH-01 top-100k sızmış şifrə siyahısı (embedded resource, `Identity/Infrastructure/Passwords/common-passwords.txt`) | Paket deyil, data faylıdır. Mənbə: github.com/danielmiessler/SecLists, 2026-10-06 |
 | `Asp.Versioning.Http` | MIT | API versioning | .NET Foundation |
 | `MailKit` | MIT | SMTP | `System.Net.Mail.SmtpClient` Microsoft tərəfindən yeni kod üçün tövsiyə olunmur |
 | `Scalar.AspNetCore` | MIT | OpenAPI UI (yalnız Development/Staging) | |

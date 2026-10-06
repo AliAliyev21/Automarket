@@ -1,4 +1,5 @@
 using AutoMarket.BuildingBlocks.Application;
+using AutoMarket.BuildingBlocks.Domain;
 using AutoMarket.BuildingBlocks.Web.Correlation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -15,6 +16,7 @@ internal sealed partial class GlobalExceptionHandler(
     {
         var error = exception switch
         {
+            DomainException domainException => ToError(domainException.Error),
             BadHttpRequestException { StatusCode: StatusCodes.Status413PayloadTooLarge } => CommonErrors.PayloadTooLarge,
             BadHttpRequestException { StatusCode: StatusCodes.Status415UnsupportedMediaType } => CommonErrors.UnsupportedMediaType,
             BadHttpRequestException => CommonErrors.ValidationFailed,
@@ -43,6 +45,12 @@ internal sealed partial class GlobalExceptionHandler(
             ProblemDetails = error.ToProblemDetails(),
         });
     }
+
+    // CONVENTIONS §4.4: domen xətasının növü → HTTP status xəritəsi yalnız burada
+    private static Error ToError(DomainError domainError) => new(
+        domainError.Code,
+        domainError.Message,
+        domainError.Kind == DomainErrorKind.Validation ? StatusCodes.Status400BadRequest : StatusCodes.Status409Conflict);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Unhandled exception")]
     private static partial void LogUnhandledException(ILogger logger, Exception exception);

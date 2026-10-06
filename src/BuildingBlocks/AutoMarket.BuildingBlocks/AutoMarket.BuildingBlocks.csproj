@@ -1,3 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Hosting, Options, Logging və Data Protection abstraksiyaları üçün (outbox publisher, consumer host, platform) -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="RabbitMQ.Client" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="AutoMarket.BuildingBlocks.UnitTests" />
+    <InternalsVisibleTo Include="AutoMarket.IntegrationTests" />
+  </ItemGroup>
+
 </Project>
