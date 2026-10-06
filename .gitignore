@@ -6,6 +6,15 @@
 # dotenv files
 .env
 
+# Lokal secret-lər (SEC-SEC-04); .env.example repoda qalır
+.env*
+!.env.example
+secrets.json
+appsettings.*.local.json
+
+# Lokal fayl storage (ARCHITECTURE §11)
+.data/
+
 # User-specific files
 *.rsuser
 *.suo
