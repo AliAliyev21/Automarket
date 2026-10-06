@@ -1,5 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <!-- Lokal secret-lər: dotnet user-secrets (SEC-SEC-02, README) -->
+    <UserSecretsId>automarket-api-3f6c1d2e-8b4a-4c1f-9e7d-2a5b6c8d9e01</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Npgsql" />
+    <PackageReference Include="RabbitMQ.Client" />
+    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Formatting.Compact" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.Seq" />
+    <PackageReference Include="StackExchange.Redis" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\BuildingBlocks\AutoMarket.BuildingBlocks.Web\AutoMarket.BuildingBlocks.Web.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\AutoMarket.Identity\AutoMarket.Identity.csproj" />

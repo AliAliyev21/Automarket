@@ -969,7 +969,7 @@ Seçim qaydası: lisenziyası açıq və pulsuz olanlara üstünlük verilir. M�
 | Paket | Lisenziya | Məqsəd | Qeyd |
 |---|---|---|---|
 | ASP.NET Core, EF Core, `Microsoft.Extensions.*` (Identity Core, JwtBearer, HybridCache, StackExchangeRedis cache, OpenApi, DataProtection.EntityFrameworkCore, HealthChecks.EntityFrameworkCore, TimeProvider.Testing) | MIT | platforma | .NET-in öz hissəsi |
-| `Npgsql.EntityFrameworkCore.PostgreSQL`, `Npgsql.OpenTelemetry` | PostgreSQL License | EF Core provayderi | |
+| `Npgsql`, `Npgsql.EntityFrameworkCore.PostgreSQL`, `Npgsql.OpenTelemetry` | PostgreSQL License | ADO.NET driver (health check), EF Core provayderi | |
 | `EFCore.NamingConventions` | Apache 2.0 | snake_case | |
 | `RabbitMQ.Client` 7.x | Apache 2.0 / MPL 2.0 | broker client | [ADR-0005](adr/0005-messaging-library-rabbitmq-client.md) |
 | `StackExchange.Redis` | MIT | Redis client (rate limit, cache) | |

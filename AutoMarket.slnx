@@ -42,5 +42,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/AutoMarket.ArchitectureTests/AutoMarket.ArchitectureTests.csproj" />
+    <Project Path="tests/AutoMarket.IntegrationTests/AutoMarket.IntegrationTests.csproj" />
   </Folder>
 </Solution>

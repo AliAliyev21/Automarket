@@ -24,7 +24,8 @@ public sealed class ModuleBoundaryTests
     {
         var modules = AllModulesAndContracts();
 
-        Types().That().ResideInAssembly(BuildingBlocks, BuildingBlocksWeb)
+        // Tam ad lazımdır: AutoMarket.BuildingBlocks namespace-i using static-dən əvvəl tapılır
+        Types().That().ResideInAssembly(AutoMarketArchitecture.BuildingBlocks, BuildingBlocksWeb)
             .Should().NotDependOnAnyTypesThat().ResideInAssembly(modules[0], modules[1..])
             .Because("BuildingBlocks are shared by all modules and must not know any of them")
             .WithoutRequiringPositiveResults()

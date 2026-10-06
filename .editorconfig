@@ -134,3 +134,5 @@ dotnet_diagnostic.CA2007.severity = none
 [tests/**.cs]
 dotnet_diagnostic.CA1707.severity = none
 dotnet_diagnostic.CA1515.severity = none
+# Test metodlarında Async sonluğu yazılmır (CONVENTIONS §11.2)
+dotnet_naming_rule.async_methods_rule.severity = none
