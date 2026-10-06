@@ -20,6 +20,24 @@ public sealed class IdentityOptionsValidatorTests
     }
 
     [Fact]
+    public void Validate_PasswordResetLifetimeZero_Fails()
+    {
+        var options = TestData.Options().Value;
+        options.Tokens.PasswordResetLifetime = TimeSpan.Zero;
+
+        new IdentityOptionsValidator().Validate(null, options).Failed.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Validate_StatusCacheLocalLongerThanDistributed_Fails()
+    {
+        var options = TestData.Options().Value;
+        options.StatusCache.LocalExpiration = TimeSpan.FromMinutes(10);
+
+        new IdentityOptionsValidator().Validate(null, options).Failed.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Validate_MinLengthBelowTen_Fails()
     {
         var options = TestData.Options().Value;

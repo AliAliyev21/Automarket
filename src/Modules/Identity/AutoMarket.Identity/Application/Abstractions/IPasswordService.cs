@@ -12,6 +12,9 @@ internal interface IPasswordService
 
     // Saxlanılmış hash-in iterasiya sayı konfiqurasiyadakından azdırsa login zamanı yenilənir
     public void Rehash(User user, string password);
+
+    // FR-AUTH-06/07: yeni hash və yeni security stamp. Siyasət yoxlaması (IPasswordPolicy) əvvəldən aparılır
+    public void SetPassword(User user, string password);
 }
 
 internal enum PasswordCheckResult

@@ -1,5 +1,7 @@
+using AutoMarket.BuildingBlocks.Application;
 using AutoMarket.Identity.Application.Abstractions;
 using AutoMarket.Identity.Application.Me.GetMe;
+using AutoMarket.Identity.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace AutoMarket.Identity.Infrastructure.Persistence.Queries;
@@ -28,5 +30,21 @@ internal sealed class UserQueries(IdentityDbContext db) : IUserQueries
             .ToListAsync(cancellationToken);
 
         return new MeResponse(user.Id, user.Email!, user.Name, user.PhoneNumber, roles, user.CreatedAt);
+    }
+
+    public async Task<UserAccessStatus> GetAccessStatusAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var status = await db.Users
+            .AsNoTracking()
+            .Where(u => u.Id == userId)
+            .Select(u => (UserStatus?)u.Status)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return status switch
+        {
+            UserStatus.Active => UserAccessStatus.Active,
+            UserStatus.Blocked => UserAccessStatus.Blocked,
+            _ => UserAccessStatus.Inactive,
+        };
     }
 }

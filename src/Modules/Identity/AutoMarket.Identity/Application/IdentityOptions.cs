@@ -19,6 +19,8 @@ internal sealed class IdentityOptions
 
     public RefreshTokenSettings RefreshTokens { get; set; } = new();
 
+    public StatusCacheSettings StatusCache { get; set; } = new();
+
     internal sealed class PasswordSettings
     {
         public int IterationCount { get; set; }
@@ -44,6 +46,9 @@ internal sealed class IdentityOptions
     internal sealed class TokenSettings
     {
         public TimeSpan EmailConfirmationLifetime { get; set; }
+
+        // FR-AUTH-06 AC2: 1 saat
+        public TimeSpan PasswordResetLifetime { get; set; }
     }
 
     internal sealed class RefreshTokenSettings
@@ -53,6 +58,14 @@ internal sealed class IdentityOptions
         public TimeSpan AbsoluteLifetime { get; set; }
 
         public int MaxSessions { get; set; }
+    }
+
+    // ARCHITECTURE §8.7: user-status:{id} — L2 (Redis) 5 dəq, L1 5 s. L1 TTL bloklamanın digər instansiyalarda gecikməsidir
+    internal sealed class StatusCacheSettings
+    {
+        public TimeSpan Expiration { get; set; }
+
+        public TimeSpan LocalExpiration { get; set; }
     }
 }
 
@@ -85,6 +98,17 @@ internal sealed class IdentityOptionsValidator : IValidateOptions<IdentityOption
         if (options.Tokens.EmailConfirmationLifetime <= TimeSpan.Zero)
         {
             failures.Add($"{Section}:Tokens:EmailConfirmationLifetime must be positive.");
+        }
+
+        if (options.Tokens.PasswordResetLifetime <= TimeSpan.Zero)
+        {
+            failures.Add($"{Section}:Tokens:PasswordResetLifetime must be positive.");
+        }
+
+        var cache = options.StatusCache;
+        if (cache.Expiration <= TimeSpan.Zero || cache.LocalExpiration <= TimeSpan.Zero || cache.LocalExpiration > cache.Expiration)
+        {
+            failures.Add($"{Section}:StatusCache settings are invalid.");
         }
 
         var refresh = options.RefreshTokens;

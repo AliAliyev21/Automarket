@@ -29,6 +29,27 @@ internal sealed class IdentityIntegrationEventMapper(IDataProtectionProvider dat
         UserLockedOutDomainEvent lockedOut =>
             [new AuthEmailRequested(lockedOut.UserId, lockedOut.Email, AuthEmailKind.LockedOut, null)],
 
+        // FR-AUTH-06 AC2: link olan məktub, token şifrələnir
+        PasswordResetRequestedDomainEvent resetRequested =>
+            [new AuthEmailRequested(
+                resetRequested.UserId,
+                resetRequested.Email,
+                AuthEmailKind.ResetPassword,
+                Protect(resetRequested.RawToken, resetRequested.ExpiresAt))],
+
+        // FR-AUTH-06 AC4, FR-AUTH-07 AC2
+        PasswordChangedDomainEvent changed =>
+            [new AuthEmailRequested(changed.UserId, changed.Email, AuthEmailKind.PasswordChanged, null)],
+
+        UserBlockedDomainEvent blocked =>
+            [new UserBlocked(blocked.UserId, blocked.BlockedAt)],
+
+        UserUnblockedDomainEvent unblocked =>
+            [new UserUnblocked(unblocked.UserId)],
+
+        UserRolesChangedDomainEvent rolesChanged =>
+            [new UserRolesChanged(rolesChanged.UserId, rolesChanged.Roles)],
+
         _ => [],
     };
 

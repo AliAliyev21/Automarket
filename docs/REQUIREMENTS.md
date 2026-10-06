@@ -588,7 +588,7 @@ Bütün limitlər konfiqurasiyadan oxunur. Limit aşılarsa `429 Too Many Reques
 - **SEC-ERR-04**: xəta kodlarının siyahısı API sənədində saxlanılır və versiyalanır. Mövcud kodun mənasını dəyişmək breaking change sayılır.
 
 Xəta kodlarının başlanğıc siyahısı (tam deyil):
-`VALIDATION_FAILED`, `UNAUTHORIZED`, `FORBIDDEN`, `INVALID_CREDENTIALS`, `EMAIL_NOT_CONFIRMED`, `ACCOUNT_BLOCKED`, `ACCOUNT_LOCKED_OUT`, `TOKEN_INVALID_OR_EXPIRED`, `REFRESH_TOKEN_REUSED`, `LISTING_NOT_FOUND`, `THREAD_NOT_FOUND`, `INVALID_STATUS_TRANSITION`, `LISTING_UNDER_REVIEW`, `ACTIVE_LISTING_LIMIT_REACHED`, `IMAGE_LIMIT_REACHED`, `IMAGE_MIN_REQUIRED`, `IMAGE_INVALID`, `IMAGE_TOO_LARGE`, `SAVED_SEARCH_LIMIT_REACHED`, `USER_BLOCKED_YOU`, `CONCURRENCY_CONFLICT`, `RATE_LIMITED`, `INTERNAL_ERROR`, `PHONE_NOT_AVAILABLE`, `PAYLOAD_TOO_LARGE`, `UNSUPPORTED_MEDIA_TYPE`, `DRAFT_LIMIT_REACHED`, `FAVORITES_LIMIT_REACHED`, `ALREADY_REPORTED` (Q24).
+`VALIDATION_FAILED`, `UNAUTHORIZED`, `FORBIDDEN`, `INVALID_CREDENTIALS`, `EMAIL_NOT_CONFIRMED`, `ACCOUNT_BLOCKED`, `ACCOUNT_LOCKED_OUT`, `TOKEN_INVALID_OR_EXPIRED`, `REFRESH_TOKEN_REUSED`, `LISTING_NOT_FOUND`, `THREAD_NOT_FOUND`, `INVALID_STATUS_TRANSITION`, `LISTING_UNDER_REVIEW`, `ACTIVE_LISTING_LIMIT_REACHED`, `IMAGE_LIMIT_REACHED`, `IMAGE_MIN_REQUIRED`, `IMAGE_INVALID`, `IMAGE_TOO_LARGE`, `SAVED_SEARCH_LIMIT_REACHED`, `USER_BLOCKED_YOU`, `CONCURRENCY_CONFLICT`, `RATE_LIMITED`, `INTERNAL_ERROR`, `PHONE_NOT_AVAILABLE`, `PAYLOAD_TOO_LARGE`, `UNSUPPORTED_MEDIA_TYPE`, `DRAFT_LIMIT_REACHED`, `FAVORITES_LIMIT_REACHED`, `ALREADY_REPORTED` (Q24), `USER_NOT_FOUND` (Q25).
 
 Əlavə olunan kodların mənası (Q24):
 
@@ -600,6 +600,7 @@ Xəta kodlarının başlanğıc siyahısı (tam deyil):
 | `DRAFT_LIMIT_REACHED` | 409 | Draft sayı limiti aşılıb (FR-LST-01 AC3) |
 | `FAVORITES_LIMIT_REACHED` | 409 | Seçilmişlərin sayı limiti aşılıb (FR-FAV-01 AC2) |
 | `ALREADY_REPORTED` | 409 | İstifadəçi bu elandan artıq şikayət edib (FR-MOD-03 AC2) |
+| `USER_NOT_FOUND` | 404 | Admin əməliyyatının hədəfi olan istifadəçi yoxdur (FR-ADM-01, FR-ADM-02). R-05 pozuntuları (özünü bloklamaq, öz Admin rolunu ləğv etmək) `FORBIDDEN` (403) qaytarır |
 
 ### 4.9 Logging və audit
 
@@ -807,3 +808,4 @@ Hədəf yük (MVP): **50 000 aktiv elan**, **pik 100 RPS** (oxumaların ~80%-i a
 | Q22 | Abunəlikdən çıxma tokeni (arxitektura review-u, 2026-10-05) | İmzalı token əvəzinə SEC-AUTH-07 variantı istifadə olunur: təsadüfi token, serverdə yalnız hash-i saxlanılır | FR-NOTIF-01 AC7 |
 | Q23 | Şifrə hash alqoritmi (arxitektura review-u, 2026-10-05) | ASP.NET Core Identity-nin standart `PasswordHasher`-i: PBKDF2-HMAC-SHA512, 210 000 iterasiya (OWASP tövsiyəsi) | SEC-AUTH-02 |
 | Q24 | Əlavə xəta kodları (arxitektura review-u, 2026-10-05) | `PHONE_NOT_AVAILABLE`, `PAYLOAD_TOO_LARGE`, `UNSUPPORTED_MEDIA_TYPE`, `DRAFT_LIMIT_REACHED`, `FAVORITES_LIMIT_REACHED`, `ALREADY_REPORTED` | 4.8 |
+| Q25 | Admin əməliyyatlarının xəta kodu (mərhələ 3b, 2026-10-06) | `USER_NOT_FOUND` (404) əlavə olunur; R-05 pozuntuları üçün ayrıca kod yoxdur, `FORBIDDEN` istifadə olunur | 4.8 |

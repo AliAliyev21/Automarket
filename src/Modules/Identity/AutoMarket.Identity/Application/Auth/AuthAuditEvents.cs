@@ -10,6 +10,12 @@ internal static class AuthAuditEvents
     public const string LoginFailed = "auth.login_failed";
     public const string LockedOut = "auth.locked_out";
     public const string RefreshTokenReused = "auth.refresh_token_reused";
+    public const string Logout = "auth.logout";
+    public const string LogoutAll = "auth.logout_all";
+    public const string PasswordResetRequested = "auth.password_reset_requested";
+    public const string PasswordResetCompleted = "auth.password_reset_completed";
+    public const string PasswordChanged = "auth.password_changed";
+    public const string PasswordChangeFailed = "auth.password_change_failed";
 
     public const string TargetUser = "user";
 
@@ -21,6 +27,9 @@ internal static class AuthAuditEvents
     public const string ReasonInvalidPassword = "invalid_password";
     public const string ReasonLockedOut = "locked_out";
     public const string ReasonEmailNotConfirmed = "email_not_confirmed";
+    public const string ReasonBlocked = "blocked";
+
+    public const string FamilyIdKey = "familyId";
 
     public static IReadOnlyDictionary<string, string> Reason(string reason) =>
         new Dictionary<string, string>(StringComparer.Ordinal) { [ReasonKey] = reason };

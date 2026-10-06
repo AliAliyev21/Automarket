@@ -1,4 +1,6 @@
 using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using AutoMarket.BuildingBlocks.Web.Security;
 using AutoMarket.IntegrationTests.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
@@ -53,8 +55,9 @@ public sealed class EndpointCoverageTests(ContainersFixture containers)
             }
             else
             {
+                var policy = entry.Access == Access.Admin ? Policies.Admin : Policies.User;
                 endpoint.Metadata.GetMetadata<IAllowAnonymous>().ShouldBeNull();
-                endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().ShouldContain(data => data.Policy == Policies.User);
+                endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().ShouldContain(data => data.Policy == policy, $"{entry.Route}");
             }
         }
     }
@@ -67,10 +70,31 @@ public sealed class EndpointCoverageTests(ContainersFixture containers)
 
         foreach (var entry in AuthorizationMatrix.Endpoints.Where(entry => entry.Access != Access.Anonymous))
         {
-            using var request = new HttpRequestMessage(new HttpMethod(entry.Method), entry.Route);
+            using var request = new HttpRequestMessage(new HttpMethod(entry.Method), AuthorizationMatrix.ToConcreteRoute(entry.Route));
             using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
             response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized, $"{entry.Method} {entry.Route}");
+        }
+    }
+
+    // SEC-AUTHZ-01/06 (BFLA): Admin endpoint-ləri adi istifadəçiyə 403 qaytarır (body olsa da, handler-ə çatmır)
+    [Fact]
+    public async Task AdminEndpoints_RegularUser_Return403()
+    {
+        await using var factory = containers.CreateFactory();
+        using var client = factory.CreateApiClient();
+        var session = await AuthApi.RegisterConfirmAndLoginAsync(client);
+
+        foreach (var entry in AuthorizationMatrix.Endpoints.Where(entry => entry.Access == Access.Admin))
+        {
+            using var request = new HttpRequestMessage(new HttpMethod(entry.Method), AuthorizationMatrix.ToConcreteRoute(entry.Route))
+            {
+                Content = JsonContent.Create(new { reason = "test", role = "Admin" }),
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", session.AccessToken);
+            using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.Forbidden, $"{entry.Method} {entry.Route}");
         }
     }
 }

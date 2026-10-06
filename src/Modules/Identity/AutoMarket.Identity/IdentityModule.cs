@@ -2,18 +2,30 @@ using AutoMarket.BuildingBlocks.Application;
 using AutoMarket.BuildingBlocks.Messaging;
 using AutoMarket.BuildingBlocks.Persistence;
 using AutoMarket.BuildingBlocks.Web.Endpoints;
+using AutoMarket.Identity.Api.Admin;
 using AutoMarket.Identity.Api.Auth;
 using AutoMarket.Identity.Api.Me;
 using AutoMarket.Identity.Application;
 using AutoMarket.Identity.Application.Abstractions;
+using AutoMarket.Identity.Application.Admin.BootstrapAdmin;
+using AutoMarket.Identity.Application.Admin.Users.BlockUser;
+using AutoMarket.Identity.Application.Admin.Users.GrantRole;
+using AutoMarket.Identity.Application.Admin.Users.RevokeRole;
+using AutoMarket.Identity.Application.Admin.Users.UnblockUser;
 using AutoMarket.Identity.Application.Auth;
+using AutoMarket.Identity.Application.Auth.ChangePassword;
 using AutoMarket.Identity.Application.Auth.ConfirmEmail;
+using AutoMarket.Identity.Application.Auth.ForgotPassword;
 using AutoMarket.Identity.Application.Auth.Login;
+using AutoMarket.Identity.Application.Auth.Logout;
+using AutoMarket.Identity.Application.Auth.LogoutAll;
 using AutoMarket.Identity.Application.Auth.RefreshSession;
 using AutoMarket.Identity.Application.Auth.Register;
 using AutoMarket.Identity.Application.Auth.ResendConfirmation;
+using AutoMarket.Identity.Application.Auth.ResetPassword;
 using AutoMarket.Identity.Application.Me.GetMe;
 using AutoMarket.Identity.Domain.Users;
+using AutoMarket.Identity.Infrastructure.Caching;
 using AutoMarket.Identity.Infrastructure.Events;
 using AutoMarket.Identity.Infrastructure.Passwords;
 using AutoMarket.Identity.Infrastructure.Persistence.Queries;
@@ -55,8 +67,37 @@ public static class IdentityModule
         var api = endpoints.MapApiV1();
         api.MapAuthEndpoints();
         api.MapGetMe();
+        api.MapAdminUserEndpoints();
 
         return endpoints;
+    }
+
+    // ARCHITECTURE §11: ilk Admin-in yaradılması (Host-un "bootstrap-admin" CLI əmri). HTTP ilə əlçatan deyil.
+    // Nəticə mətni operator üçündür, şifrə yazılmır
+    public static async Task<(bool Succeeded, string Message)> BootstrapAdminAsync(
+        IServiceProvider services,
+        string email,
+        string password,
+        string name,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        await using var scope = services.CreateAsyncScope();
+        var handler = scope.ServiceProvider.GetRequiredService<ICommandHandler<BootstrapAdminCommand, BootstrapAdminOutcome>>();
+        var result = await handler.HandleAsync(new BootstrapAdminCommand(email, password, name), cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            return (true, result.Value == BootstrapAdminOutcome.Created
+                ? "Administrator account created."
+                : "Admin role granted to the existing account.");
+        }
+
+        var details = result.Error!.FieldErrors is { } fieldErrors
+            ? " " + string.Join(" ", fieldErrors.SelectMany(field => field.Value.Select(error => $"{field.Key}: {error.Message}")))
+            : string.Empty;
+        return (false, $"{result.Error.Code}: {result.Error.Message}{details}");
     }
 
     private static void AddOptions(IServiceCollection services, IConfiguration configuration)
@@ -83,6 +124,11 @@ public static class IdentityModule
         services.AddScoped<IOneTimeTokenRepository, OneTimeTokenRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IUserQueries, UserQueries>();
+
+        // SEC-AUTH-06: status middleware-i (BuildingBlocks.Web) bu implementasiyanı istifadə edir
+        services.AddScoped<CachedUserStatusReader>();
+        services.AddScoped<IUserStatusReader>(serviceProvider => serviceProvider.GetRequiredService<CachedUserStatusReader>());
+        services.AddScoped<IUserStatusCache>(serviceProvider => serviceProvider.GetRequiredService<CachedUserStatusReader>());
     }
 
     // ADR-0003: Identity Core (UI və MapIdentityApi olmadan). Kompozisiya qaydaları və daxili lockout söndürülüb:
@@ -140,6 +186,17 @@ public static class IdentityModule
         services.AddScoped<ICommandHandler<ResendConfirmationCommand>, ResendConfirmationHandler>();
         services.AddScoped<ICommandHandler<LoginCommand, SessionTokens>, LoginHandler>();
         services.AddScoped<ICommandHandler<RefreshSessionCommand, SessionTokens>, RefreshSessionHandler>();
+        services.AddScoped<ICommandHandler<LogoutCommand>, LogoutHandler>();
+        services.AddScoped<ICommandHandler<LogoutAllCommand>, LogoutAllHandler>();
+        services.AddScoped<ICommandHandler<ForgotPasswordCommand>, ForgotPasswordHandler>();
+        services.AddScoped<ICommandHandler<ResetPasswordCommand>, ResetPasswordHandler>();
+        services.AddScoped<ICommandHandler<ChangePasswordCommand>, ChangePasswordHandler>();
         services.AddScoped<IQueryHandler<GetMeQuery, MeResponse>, GetMeHandler>();
+
+        services.AddScoped<ICommandHandler<BlockUserCommand>, BlockUserHandler>();
+        services.AddScoped<ICommandHandler<UnblockUserCommand>, UnblockUserHandler>();
+        services.AddScoped<ICommandHandler<GrantRoleCommand>, GrantRoleHandler>();
+        services.AddScoped<ICommandHandler<RevokeRoleCommand>, RevokeRoleHandler>();
+        services.AddScoped<ICommandHandler<BootstrapAdminCommand, BootstrapAdminOutcome>, BootstrapAdminHandler>();
     }
 }

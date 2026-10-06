@@ -19,6 +19,11 @@ internal static class AuthEndpoints
         group.MapResendConfirmation();
         group.MapLogin();
         group.MapRefreshSession();
+        group.MapLogout();
+        group.MapLogoutAll();
+        group.MapForgotPassword();
+        group.MapResetPassword();
+        group.MapChangePassword();
 
         return group;
     }

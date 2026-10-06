@@ -20,7 +20,9 @@ cp .env.example .env
 
 `.env`-də bütün `change-me-*` dəyərlərini öz parollarınızla əvəz edin. `.env` olmadıqda və ya dəyişən boş olduqda `docker compose` işə düşmür.
 
-Kompüterdə artıq PostgreSQL işləyirsə və 5432 portu məşğuldursa, `.env`-ə `POSTGRES_PORT=5433` əlavə edin və aşağıdakı connection string-də də həmin portu yazın.
+Kompüterdə artıq PostgreSQL işləyirsə və 5432 portu məşğuldursa, `.env`-ə `POSTGRES_PORT=5433` əlavə edin.
+
+> **Vacib:** `POSTGRES_PORT` yalnız Docker-in host portunu dəyişir. API həmin portu özü bilmir — 4-cü addımdakı `Postgres:ConnectionString`-də `Port=` dəyərini də **eyni porta** dəyişməlisiniz (məs. `Port=5433`). Əks halda API kompüterdəki başqa PostgreSQL-ə qoşulmağa çalışacaq və autentifikasiya xətası verəcək.
 
 ### 3. Asılılıqları qaldırmaq
 
@@ -40,18 +42,20 @@ Portlar yalnız `127.0.0.1`-ə bağlıdır. Data named volume-larda saxlanılır
 
 ### 4. API secret-ləri (user-secrets)
 
-Connection string-lər `appsettings*.json`-da saxlanılmır. Development-də onlar `dotnet user-secrets` ilə verilir. Parollar `.env`-dəki ilə eyni olmalıdır:
+Connection string-lər `appsettings*.json`-da saxlanılmır. Development-də onlar `dotnet user-secrets` ilə verilir. Parollar `.env`-dəki ilə eyni olmalıdır.
+
+Host kimi `localhost` deyil, `127.0.0.1` yazın: Windows-da `localhost` əvvəlcə IPv6 (`::1`) ünvanına həll olunur, konteyner portları isə yalnız `127.0.0.1`-ə bağlıdır, ona görə hər yeni bağlantı IPv6 cəhdinin uğursuz olmasını gözləyir (təxminən 2 saniyə gecikmə).
 
 ```bash
-dotnet user-secrets set "Postgres:ConnectionString" "Host=localhost;Port=5432;Database=automarket;Username=automarket;Password=<POSTGRES_PASSWORD>" --project src/Host/AutoMarket.Api
+dotnet user-secrets set "Postgres:ConnectionString" "Host=127.0.0.1;Port=5432;Database=automarket;Username=automarket;Password=<POSTGRES_PASSWORD>" --project src/Host/AutoMarket.Api
 ```
 
 ```bash
-dotnet user-secrets set "Redis:ConnectionString" "localhost:6379,password=<REDIS_PASSWORD>" --project src/Host/AutoMarket.Api
+dotnet user-secrets set "Redis:ConnectionString" "127.0.0.1:6379,password=<REDIS_PASSWORD>" --project src/Host/AutoMarket.Api
 ```
 
 ```bash
-dotnet user-secrets set "RabbitMq:ConnectionString" "amqp://automarket:<RABBITMQ_PASSWORD>@localhost:5672/" --project src/Host/AutoMarket.Api
+dotnet user-secrets set "RabbitMq:ConnectionString" "amqp://automarket:<RABBITMQ_PASSWORD>@127.0.0.1:5672/" --project src/Host/AutoMarket.Api
 ```
 
 Yoxlamaq üçün:
@@ -76,7 +80,7 @@ dotnet user-secrets set "Jwt:SigningKeys:0:Key" "<base64 açar>" --project src/H
 
 Açar rotasiyası (SEC-SEC-05): `Jwt:SigningKeys` siyahısına `NotBefore` ilə yeni açar əlavə olunur, köhnə açar `RetireAfter` ilə keçid dövründən sonra çıxarılır.
 
-Digər mühitlərdə eyni açarlar environment variable ilə verilir: `AutoMarket__Postgres__ConnectionString`, `AutoMarket__Redis__ConnectionString`, `AutoMarket__RabbitMq__ConnectionString`, `AutoMarket__Jwt__SigningKeys__0__Key`, real SMTP üçün `AutoMarket__Smtp__Host`, `AutoMarket__Smtp__UserName`, `AutoMarket__Smtp__Password`. CORS origin-ləri (`Cors:AllowedOrigins`) və təsdiq linkinin ünvanı (`Notifications:Links:ConfirmEmailUrl`) hər mühit üçün ayrıca verilir.
+Digər mühitlərdə eyni açarlar environment variable ilə verilir: `AutoMarket__Postgres__ConnectionString`, `AutoMarket__Redis__ConnectionString`, `AutoMarket__RabbitMq__ConnectionString`, `AutoMarket__Jwt__SigningKeys__0__Key`, real SMTP üçün `AutoMarket__Smtp__Host`, `AutoMarket__Smtp__UserName`, `AutoMarket__Smtp__Password`. CORS origin-ləri (`Cors:AllowedOrigins`), təsdiq və şifrə bərpası linklərinin ünvanları (`Notifications:Links:ConfirmEmailUrl`, `Notifications:Links:ResetPasswordUrl`) hər mühit üçün ayrıca verilir.
 
 ### 5. API-ni işə salmaq
 
@@ -86,7 +90,19 @@ dotnet run --project src/Host/AutoMarket.Api
 
 Log-lar stdout-a JSON formatında yazılır və Development-də Seq-ə də göndərilir. Development-də bütün modulların migration-ları startup-da tətbiq olunur (`Database:MigrateOnStartup`).
 
-Auth axınını yoxlamaq üçün: Scalar-da `POST /api/v1/auth/register` → Mailpit-də (`http://localhost:8025`) təsdiq məktubu (az + en) → linkdəki `token` ilə `POST /api/v1/auth/confirm-email` → `POST /api/v1/auth/login` → access token ilə `GET /api/v1/me`. Refresh token yalnız `rt` HttpOnly cookie-dədir və `POST /api/v1/auth/refresh` yalnız `Cors:AllowedOrigins`-dəki `Origin` ilə qəbul olunur.
+Auth axınını yoxlamaq üçün: Scalar-da `POST /api/v1/auth/register` → Mailpit-də (`http://localhost:8025`) təsdiq məktubu (az + en) → linkdəki `token` ilə `POST /api/v1/auth/confirm-email` → `POST /api/v1/auth/login` → access token ilə `GET /api/v1/me`. Refresh token yalnız `rt` HttpOnly cookie-dədir; `POST /api/v1/auth/refresh` və `POST /api/v1/auth/logout` yalnız `Cors:AllowedOrigins`-dəki `Origin` ilə qəbul olunur.
+
+Şifrə bərpası: `POST /api/v1/auth/forgot-password` → Mailpit-də bərpa məktubu → linkdəki `token` ilə `POST /api/v1/auth/reset-password` (`{ token, newPassword }`). Login olmuş istifadəçi şifrəni `POST /api/v1/auth/change-password` ilə dəyişir, bütün cihazlardan `POST /api/v1/auth/logout-all` ilə çıxır.
+
+### 6. İlk Admin
+
+Admin hesabı API ilə yaradılmır və kodda parol yoxdur. Birdəfəlik əmr (sistemdə aktiv Admin varsa rədd olunur):
+
+```bash
+dotnet run --project src/Host/AutoMarket.Api -- bootstrap-admin --email admin@automarket.az --name "Administrator"
+```
+
+Şifrə arqument kimi verilmir (shell tarixçəsinə düşməsin): əmr onu ekranda göstərmədən soruşur. Avtomatlaşdırılmış mühitdə `AutoMarket__BootstrapAdmin__Password` environment variable-ı ilə verilir və əmrdən sonra silinir. Email artıq təsdiqlənmiş hesaba aiddirsə, həmin hesaba Admin rolu verilir; yoxdursa, təsdiqlənmiş yeni hesab yaradılır. Sonrakı Admin və Moderator-lar `POST /api/v1/admin/users/{id}/roles` ilə təyin olunur.
 
 ### Ünvanlar
 

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 
 namespace AutoMarket.Identity.Application.Auth.Login;
 
-// FR-AUTH-03. SEC-AUTH-08: hesab yoxdursa dummy hash yoxlanılır; EMAIL_NOT_CONFIRMED və ACCOUNT_LOCKED_OUT yalnız şifrə
+// FR-AUTH-03. SEC-AUTH-08: hesab yoxdursa dummy hash yoxlanılır; EMAIL_NOT_CONFIRMED, ACCOUNT_BLOCKED və ACCOUNT_LOCKED_OUT yalnız şifrə
 // düzgün olduqda qaytarılır. SEC-AUTH-03: kilid zamanı yanlış cəhd sayğacı artırmır (kilid uzanmır)
 internal sealed class LoginHandler(
     IUserRepository users,
@@ -62,6 +62,12 @@ internal sealed class LoginHandler(
         if (user.IsLockedOut(now))
         {
             return await FailAsync(user, AuthAuditEvents.ReasonLockedOut, AuthErrors.AccountLockedOut, cancellationToken);
+        }
+
+        // FR-AUTH-03 AC4, R-04: yalnız şifrə düzgün olduqda
+        if (user.Status == UserStatus.Blocked)
+        {
+            return await FailAsync(user, AuthAuditEvents.ReasonBlocked, CommonErrors.AccountBlocked, cancellationToken);
         }
 
         if (user.Status == UserStatus.Unconfirmed)
