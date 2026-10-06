@@ -9,6 +9,9 @@ namespace AutoMarket.Identity.Domain.Users;
 // Identity-nin daxili lockout-u söndürülüb: eskalasiya olunan lockout bu sinifdədir (SEC-AUTH-03)
 internal sealed class User : IdentityUser<Guid>, IHasDomainEvents
 {
+    // FR-ADM-01 AC1
+    public const int BlockReasonMaxLength = 500;
+
     private readonly List<IDomainEvent> _domainEvents = [];
 
     private User()
@@ -26,6 +29,10 @@ internal sealed class User : IdentityUser<Guid>, IHasDomainEvents
     public int LockoutLevel { get; private set; }
 
     public DateTimeOffset? LastFailedLoginAt { get; private set; }
+
+    public DateTimeOffset? BlockedAt { get; private set; }
+
+    public string? BlockReason { get; private set; }
 
     public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents;
 
@@ -109,5 +116,67 @@ internal sealed class User : IdentityUser<Guid>, IHasDomainEvents
         LockoutLevel = 0;
         LastFailedLoginAt = null;
         LockoutEnd = null;
+    }
+
+    // FR-AUTH-06 AC2: xam token yalnız yaddaşdakı domen hadisəsindədir, outbox-a şifrələnmiş halda yazılır
+    public void RequestPasswordReset(string rawToken, DateTimeOffset expiresAt) =>
+        _domainEvents.Add(new PasswordResetRequestedDomainEvent(Id, Email!, rawToken, expiresAt));
+
+    // FR-AUTH-06 AC4: lockout sayğacı sıfırlanır və "şifrəniz dəyişdirildi" məktubu göndərilir. Hash-i IPasswordService yazır
+    public void CompletePasswordReset()
+    {
+        RecordSuccessfulLogin();
+        _domainEvents.Add(new PasswordChangedDomainEvent(Id, Email!));
+    }
+
+    // FR-AUTH-07 AC2: bildiriş məktubu. Cari şifrə düzgün olduğu üçün uğursuz cəhd sayğacı sıfırlanır
+    public void RecordPasswordChange()
+    {
+        RecordSuccessfulLogin();
+        _domainEvents.Add(new PasswordChangedDomainEvent(Id, Email!));
+    }
+
+    // FR-ADM-01 AC1/AC2. Artıq bloklanıbsa heç nə dəyişmir (idempotent) və false qaytarılır
+    public bool Block(string reason, DateTimeOffset now)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+
+        if (Status == UserStatus.Blocked)
+        {
+            return false;
+        }
+
+        Status = UserStatus.Blocked;
+        BlockedAt = now;
+        BlockReason = reason;
+        _domainEvents.Add(new UserBlockedDomainEvent(Id, now));
+        return true;
+    }
+
+    // FR-ADM-01 AC3: status bloklanmadan əvvəlki vəziyyətə qayıdır (email təsdiqlənibsə Active, yoxsa Unconfirmed)
+    public bool Unblock()
+    {
+        if (Status != UserStatus.Blocked)
+        {
+            return false;
+        }
+
+        Status = ConfirmedAt is null ? UserStatus.Unconfirmed : UserStatus.Active;
+        BlockedAt = null;
+        BlockReason = null;
+        _domainEvents.Add(new UserUnblockedDomainEvent(Id));
+        return true;
+    }
+
+    // FR-ADM-02: rollar Identity-nin user_roles cədvəlindədir (repository), aggregate yalnız dəyişikliyi bildirir
+    public void RecordRolesChanged(IReadOnlyList<string> roles) =>
+        _domainEvents.Add(new UserRolesChangedDomainEvent(Id, roles));
+
+    // İlk Admin (CLI): email sahibliyi operator tərəfindən təsdiqlənir
+    public static User RegisterConfirmed(Guid id, string normalizedEmail, string name, DateTimeOffset now)
+    {
+        var user = Register(id, normalizedEmail, name, phone: null, now);
+        user.ConfirmEmail(now);
+        return user;
     }
 }

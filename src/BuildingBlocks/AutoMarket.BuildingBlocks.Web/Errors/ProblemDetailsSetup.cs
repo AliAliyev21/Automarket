@@ -12,6 +12,7 @@ public static class ProblemDetailsSetup
     public const string CodeKey = "code";
     public const string MessageKey = "message";
     public const string TraceIdKey = "traceId";
+    public const string ErrorsKey = "errors";
 
     public static IServiceCollection AddApiProblemDetails(this IServiceCollection services)
     {
@@ -28,6 +29,11 @@ public static class ProblemDetailsSetup
         var problem = new ProblemDetails { Status = error.HttpStatus };
         problem.Extensions[CodeKey] = error.Code;
         problem.Extensions[MessageKey] = error.Message;
+
+        if (error.FieldErrors is { Count: > 0 } fieldErrors)
+        {
+            problem.Extensions[ErrorsKey] = fieldErrors;
+        }
 
         return problem;
     }

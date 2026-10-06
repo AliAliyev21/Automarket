@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using RabbitMQ.Client;
@@ -8,6 +9,8 @@ namespace AutoMarket.Api.Configuration;
 // Asılılıqların konfiqurasiyası və client-ləri. Məcburi dəyər olmadıqda proses işə düşmür (SEC-SEC-03, ARCHITECTURE §8.6)
 internal static class InfrastructureServiceCollectionExtensions
 {
+    private const string CacheKeyPrefix = "cache:";
+
     public static IServiceCollection AddInfrastructureClients(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddValidatedOptions<PostgresOptions, PostgresOptionsValidator>(configuration, PostgresOptions.SectionName);
@@ -32,6 +35,17 @@ internal static class InfrastructureServiceCollectionExtensions
             options.LoggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
             return ConnectionMultiplexer.Connect(options);
         });
+
+        // ARCHITECTURE §8.7, ADR-0007: HybridCache — L1 prosesdaxili, L2 Redis (eyni IConnectionMultiplexer). TTL-lər hər
+        // açar üçün çağıran moduldan gəlir. Redis əlçatmaz olduqda L1 və factory ilə işləməyə davam edir
+        services.AddStackExchangeRedisCache(_ => { });
+        services.AddOptions<RedisCacheOptions>()
+            .Configure<IConnectionMultiplexer>((options, multiplexer) =>
+            {
+                options.InstanceName = CacheKeyPrefix;
+                options.ConnectionMultiplexerFactory = () => Task.FromResult(multiplexer);
+            });
+        services.AddHybridCache();
 
         // Paylaşılan bağlantı BuildingBlocks.Messaging-dəki RabbitMqConnectionProvider tərəfindən açılır (ADR-0005)
         services.AddSingleton(serviceProvider => new ConnectionFactory

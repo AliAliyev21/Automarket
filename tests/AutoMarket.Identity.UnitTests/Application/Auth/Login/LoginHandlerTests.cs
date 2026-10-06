@@ -154,6 +154,29 @@ public sealed class LoginHandlerTests
         active.Skip(1).ShouldAllBe(token => token.RevokedAt == null);
     }
 
+    [Fact]
+    public async Task Handle_BlockedCorrectPassword_AccountBlocked()
+    {
+        var user = GivenUser(new UserBuilder().Blocked().Build(), PasswordCheckResult.Success);
+
+        var result = await HandleAsync(user.Email!);
+
+        result.Error.ShouldBe(CommonErrors.AccountBlocked);
+        _fixture.RefreshTokens.DidNotReceiveWithAnyArgs().Add(default!);
+        _fixture.ShouldHaveAudited(AuthAuditEvents.LoginFailed);
+    }
+
+    [Fact]
+    public async Task Handle_BlockedWrongPassword_InvalidCredentials()
+    {
+        // FR-AUTH-03 AC4: ACCOUNT_BLOCKED yalnız şifrə düzgün olduqda (SEC-AUTH-08)
+        var user = GivenUser(new UserBuilder().Blocked().Build(), PasswordCheckResult.Failed);
+
+        var result = await HandleAsync(user.Email!);
+
+        result.Error.ShouldBe(AuthErrors.InvalidCredentials);
+    }
+
     private User GivenUser(User user, PasswordCheckResult check)
     {
         _fixture.Users.FindByEmailAsync(user.Email!, Arg.Any<CancellationToken>()).Returns(user);

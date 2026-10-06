@@ -17,6 +17,14 @@ internal static class RoleSeed
         Create(AdminRoleId, Roles.Admin),
     ];
 
+    public static Guid IdOf(string role) => role switch
+    {
+        Roles.User => UserRoleId,
+        Roles.Moderator => ModeratorRoleId,
+        Roles.Admin => AdminRoleId,
+        _ => throw new ArgumentOutOfRangeException(nameof(role), role, "Unknown role."),
+    };
+
     private static Role Create(Guid id, string name) => new()
     {
         Id = id,

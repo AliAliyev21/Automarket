@@ -21,6 +21,9 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.Name).HasMaxLength(50);
         builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
 
+        // FR-ADM-01 AC1: səbəb məcburidir, 1–500 simvol
+        builder.Property(x => x.BlockReason).HasMaxLength(User.BlockReasonMaxLength);
+
         // FR-AUTH-01 AC2: email unikaldır (normallaşdırılmış sütun üzrə)
         builder.HasIndex(x => x.NormalizedEmail).HasDatabaseName("ix_users_normalized_email").IsUnique();
         builder.HasIndex(x => x.NormalizedUserName).HasDatabaseName("ix_users_normalized_user_name").IsUnique();

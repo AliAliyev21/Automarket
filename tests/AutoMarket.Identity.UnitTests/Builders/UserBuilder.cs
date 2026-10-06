@@ -9,6 +9,7 @@ internal sealed class UserBuilder
     private string _email = "user@automarket.az";
     private string _name = "Əli Məmmədov";
     private bool _confirmed = true;
+    private bool _blocked;
 
     public UserBuilder WithId(Guid id)
     {
@@ -34,6 +35,12 @@ internal sealed class UserBuilder
         return this;
     }
 
+    public UserBuilder Blocked()
+    {
+        _blocked = true;
+        return this;
+    }
+
     public User Build()
     {
         var user = User.Register(_id, _email, _name, phone: null, TestData.Now.AddDays(-1));
@@ -42,6 +49,11 @@ internal sealed class UserBuilder
         if (_confirmed)
         {
             user.ConfirmEmail(TestData.Now.AddDays(-1));
+        }
+
+        if (_blocked)
+        {
+            user.Block("Spam", TestData.Now.AddHours(-1));
         }
 
         user.ClearDomainEvents();

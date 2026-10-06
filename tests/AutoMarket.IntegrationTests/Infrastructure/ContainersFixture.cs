@@ -80,6 +80,7 @@ public sealed class ContainersFixture : IAsyncLifetime
             ["Smtp:Port"] = "1025",
             ["Smtp:Security"] = "None",
             ["Notifications:Links:ConfirmEmailUrl"] = $"{AllowedOrigin}/confirm-email",
+            ["Notifications:Links:ResetPasswordUrl"] = $"{AllowedOrigin}/reset-password",
             ["Messaging:Outbox:PollInterval"] = "00:00:00.100",
             ["Messaging:Outbox:IdleDelay"] = "00:00:00.200",
             ["Messaging:ReconnectDelay"] = "00:00:01",

@@ -25,12 +25,21 @@ internal static class TestData
             BaseDuration = Lockout.BaseDuration,
             MaxDuration = Lockout.MaxDuration,
         },
-        Tokens = new IdentityOptions.TokenSettings { EmailConfirmationLifetime = TimeSpan.FromHours(24) },
+        Tokens = new IdentityOptions.TokenSettings
+        {
+            EmailConfirmationLifetime = TimeSpan.FromHours(24),
+            PasswordResetLifetime = TimeSpan.FromHours(1),
+        },
         RefreshTokens = new IdentityOptions.RefreshTokenSettings
         {
             SlidingLifetime = TimeSpan.FromDays(14),
             AbsoluteLifetime = TimeSpan.FromDays(60),
             MaxSessions = 10,
+        },
+        StatusCache = new IdentityOptions.StatusCacheSettings
+        {
+            Expiration = TimeSpan.FromMinutes(5),
+            LocalExpiration = TimeSpan.FromSeconds(5),
         },
     });
 }

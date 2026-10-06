@@ -49,6 +49,81 @@ internal static partial class AuthApi
         return client.SendAsync(request, TestContext.Current.CancellationToken);
     }
 
+    public static Task<HttpResponseMessage> LogoutAsync(HttpClient client, string? refreshToken, string? origin = ContainersFixture.AllowedOrigin)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/logout");
+        if (refreshToken is not null)
+        {
+            request.Headers.Add("Cookie", $"{RefreshCookieName}={refreshToken}");
+        }
+
+        if (origin is not null)
+        {
+            request.Headers.Add("Origin", origin);
+        }
+
+        return client.SendAsync(request, TestContext.Current.CancellationToken);
+    }
+
+    public static Task<HttpResponseMessage> LogoutAllAsync(HttpClient client, string accessToken) =>
+        SendAsync(client, HttpMethod.Post, "/api/v1/auth/logout-all", accessToken);
+
+    public static Task<HttpResponseMessage> ForgotPasswordAsync(HttpClient client, string email) =>
+        PostJsonAsync(client, "/api/v1/auth/forgot-password", new { email });
+
+    public static Task<HttpResponseMessage> ResetPasswordAsync(HttpClient client, string token, string newPassword) =>
+        PostJsonAsync(client, "/api/v1/auth/reset-password", new { token, newPassword });
+
+    public static Task<HttpResponseMessage> ChangePasswordAsync(
+        HttpClient client,
+        string accessToken,
+        string currentPassword,
+        string newPassword,
+        string? refreshToken = null)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/change-password")
+        {
+            Content = JsonContent.Create(new { currentPassword, newPassword }),
+        };
+        if (refreshToken is not null)
+        {
+            request.Headers.Add("Cookie", $"{RefreshCookieName}={refreshToken}");
+        }
+
+        return SendAsync(client, request, accessToken);
+    }
+
+    // Bearer token ilə ixtiyari sorğu (body JSON)
+    public static Task<HttpResponseMessage> SendAsync(HttpClient client, HttpMethod method, string path, string? accessToken, object? body = null)
+    {
+        var request = new HttpRequestMessage(method, path);
+        if (body is not null)
+        {
+            request.Content = JsonContent.Create(body);
+        }
+
+        return SendAsync(client, request, accessToken);
+    }
+
+    public static async Task<Guid> GetUserIdAsync(HttpClient client, string accessToken)
+    {
+        using var me = await GetMeAsync(client, accessToken);
+        me.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using var body = JsonDocument.Parse(await me.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        return body.RootElement.GetProperty("id").GetGuid();
+    }
+
+    // Şifrə bərpası məktubundakı linkdən token (az+en)
+    public static async Task<string> WaitForResetTokenAsync(string email, int expectedResetEmails = 1)
+    {
+        var messages = await Eventually.WaitAsync(
+            () => Task.FromResult(FakeEmailTransport.SentTo(email).Where(message => ResetLinkPattern().IsMatch(message.TextBody)).ToList()),
+            resets => resets.Count >= expectedResetEmails,
+            TestContext.Current.CancellationToken);
+
+        return Uri.UnescapeDataString(ResetLinkPattern().Match(messages[expectedResetEmails - 1].TextBody).Groups["token"].Value);
+    }
+
     public static async Task<HttpResponseMessage> GetMeAsync(HttpClient client, string? accessToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/me");
@@ -110,11 +185,27 @@ internal static partial class AuthApi
             root.TryGetProperty("errors", out var errors) ? errors.Clone() : null);
     }
 
+    private static async Task<HttpResponseMessage> SendAsync(HttpClient client, HttpRequestMessage request, string? accessToken)
+    {
+        using (request)
+        {
+            if (accessToken is not null)
+            {
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            }
+
+            return await client.SendAsync(request, TestContext.Current.CancellationToken);
+        }
+    }
+
     private static Task<HttpResponseMessage> PostJsonAsync(HttpClient client, string path, object body) =>
         client.PostAsJsonAsync(new Uri(path, UriKind.Relative), body, TestContext.Current.CancellationToken);
 
     [GeneratedRegex(@"confirm-email\?token=(?<token>[^\s""&<]+)")]
     private static partial Regex ConfirmationLinkPattern();
+
+    [GeneratedRegex(@"reset-password\?token=(?<token>[^\s""&<]+)")]
+    private static partial Regex ResetLinkPattern();
 
     public sealed record Session(string Email, string AccessToken, string RefreshToken);
 

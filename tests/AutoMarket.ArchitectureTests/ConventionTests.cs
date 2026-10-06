@@ -13,6 +13,10 @@ public sealed class ConventionTests
     // Request modellərində yazıla bilən sistem sahəsi olmamalıdır (istisnalar açıq siyahı ilə)
     private static readonly string[] SystemProperties = ["Id", "OwnerId", "UserId", "Status", "Role", "Roles", "CreatedAt", "PriceAzn"];
 
+    // Açıq istisnalar: sahəni dəyişmək endpoint-in məqsədidir, policy ilə qorunur və dəyər allow-list ilə yoxlanılır.
+    // GrantRoleRequest.Role — FR-ADM-02 (yalnız Admin, yalnız Moderator/Admin dəyərləri)
+    private static readonly (string Request, string Property)[] AllowedSystemProperties = [("GrantRoleRequest", "Role")];
+
     [Theory]
     [MemberData(nameof(Modules), MemberType = typeof(AutoMarketArchitecture))]
     public void DbContexts_Namespace_OnlyInInfrastructure(string module)
@@ -56,6 +60,7 @@ public sealed class ConventionTests
         {
             var systemFields = request.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(property => SystemProperties.Contains(property.Name, StringComparer.Ordinal))
+                .Where(property => !AllowedSystemProperties.Contains((request.Name, property.Name)))
                 .Select(property => property.Name)
                 .ToList();
 

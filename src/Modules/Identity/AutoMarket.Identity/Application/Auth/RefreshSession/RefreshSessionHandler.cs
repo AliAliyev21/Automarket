@@ -49,7 +49,7 @@ internal sealed class RefreshSessionHandler(
             return CommonErrors.Unauthorized;
         }
 
-        // FR-AUTH-04 AC3: təsdiqlənməmiş (və 3b-də bloklanmış/silinmiş) istifadəçinin tokeni qəbul edilmir
+        // FR-AUTH-04 AC3: təsdiqlənməmiş və bloklanmış istifadəçinin tokeni qəbul edilmir
         var user = await users.GetByIdAsync(token.UserId, cancellationToken);
         if (user is not { Status: UserStatus.Active })
         {

@@ -12,4 +12,13 @@ internal interface IUserRepository
     public Task CreateAsync(User user, string password, CancellationToken cancellationToken);
 
     public Task<IReadOnlyList<string>> GetRolesAsync(Guid userId, CancellationToken cancellationToken);
+
+    // FR-ADM-02: rol artıq varsa false. SaveChanges çağırılmır
+    public Task<bool> AddRoleAsync(Guid userId, string role, CancellationToken cancellationToken);
+
+    // FR-ADM-02: rol yoxdursa false. SaveChanges çağırılmır
+    public Task<bool> RemoveRoleAsync(Guid userId, string role, CancellationToken cancellationToken);
+
+    // R-05: Admin rolu olan və bloklanmamış istifadəçi
+    public Task<bool> AnyActiveAdminAsync(CancellationToken cancellationToken);
 }

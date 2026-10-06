@@ -27,5 +27,15 @@ public static class CommonErrors
     public static readonly Error UnsupportedMediaType =
         new(ErrorCodes.UnsupportedMediaType, "Unsupported content type.", 415);
 
+    // CONVENTIONS §6.3: 401 — bloklanmış istifadəçi (login və status middleware)
+    public static readonly Error AccountBlocked =
+        new(ErrorCodes.AccountBlocked, "The account is blocked.", 401);
+
     public static Error RateLimitedFor(TimeSpan retryAfter) => RateLimited with { RetryAfter = retryAfter };
+
+    public static Error ValidationFailedFor(string field, IEnumerable<FieldError> errors) =>
+        ValidationFailed with
+        {
+            FieldErrors = new Dictionary<string, IReadOnlyList<FieldError>>(StringComparer.Ordinal) { [field] = [.. errors] },
+        };
 }

@@ -16,4 +16,15 @@ internal interface IRefreshTokenRepository
     public Task<bool> TryRevokeForRotationAsync(Guid tokenId, Guid replacedById, DateTimeOffset now, CancellationToken cancellationToken);
 
     public Task<int> RevokeAllActiveAsync(Guid userId, RefreshTokenRevocationReason reason, DateTimeOffset now, CancellationToken cancellationToken);
+
+    // FR-AUTH-07 AC2: cari sessiya (ailə) saxlanılır, qalanları ləğv olunur
+    public Task<int> RevokeAllActiveExceptFamilyAsync(
+        Guid userId,
+        Guid keptFamilyId,
+        RefreshTokenRevocationReason reason,
+        DateTimeOffset now,
+        CancellationToken cancellationToken);
+
+    // FR-AUTH-05 AC1: bir sessiya = bir ailə
+    public Task<int> RevokeFamilyAsync(Guid familyId, RefreshTokenRevocationReason reason, DateTimeOffset now, CancellationToken cancellationToken);
 }

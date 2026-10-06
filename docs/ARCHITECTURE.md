@@ -688,7 +688,7 @@ Kestrel: `AddServerHeader = false`, `MaxRequestBodySize = 64 KB` (default), şə
 | SEC-AUTH-03 Lockout | Identity: `LoginService` + Identity lockout sahələri | `AccessFailedCount`, `LockoutEnd` + öz `lockout_level` və `last_failed_at` sütunları istifadə olunur. 15 dəqiqə ərzində 5 ardıcıl uğursuz cəhd olarsa, kilid müddəti `15 dəq × 2^(level-1)` olur (≤ 24 saat). Uğurlu login sayğacı sıfırlayır. Lockout baş verəndə `AuthEmailRequested(LockedOut)` göndərilir. IP üzrə limit ayrıca işləyir (SEC-RATE-01) |
 | SEC-AUTH-04 Access token | Host: `JwtBearer` konfiqurasiyası | `ValidAlgorithms = [HS256]`, `ValidateIssuer/Audience/Lifetime/IssuerSigningKey = true`, `ClockSkew = 30 s`, `RequireExpirationTime`, `RequireSignedTokens`. Token ömrü 15 dəq (konfiqurasiyadan). `MapInboundClaims = false` |
 | SEC-AUTH-05 Refresh token | Identity: `RefreshTokenService` | §6.1. Ləğvetmə səbəbləri: logout, logout-all, password change/reset, block, delete, role downgrade, reuse, session limit |
-| SEC-AUTH-06 Status yoxlaması | BuildingBlocks.Web: `UserStatusMiddleware` + Identity: `IUserStatusReader` | Autentifikasiya olunmuş hər sorğuda `sub` üzrə status yoxlanılır. Status `HybridCache`-dədir (açar `user-status:{id}`, L2 Redis 5 dəq, L1 5 s). Block/delete/role downgrade baş verəndə Identity açarı dərhal L2-dən silir. Blocked/Deleted olduqda `401` + `ACCOUNT_BLOCKED` qaytarılır. Maksimum gecikmə L1 TTL-ə (5 s) bərabərdir |
+| SEC-AUTH-06 Status yoxlaması | BuildingBlocks.Web: `UserStatusMiddleware` + BuildingBlocks.Application: `IUserStatusReader` (implementasiya Identity Infrastructure-da: `CachedUserStatusReader`; interfeys BuildingBlocks-dadır ki, middleware modula asılı olmasın) | Autentifikasiya olunmuş hər sorğuda `sub` üzrə status yoxlanılır. Status `HybridCache`-dədir (açar `user-status:{id}`, L2 Redis 5 dəq, L1 5 s). Block/delete/role downgrade baş verəndə Identity açarı dərhal L2-dən silir. Blocked/Deleted olduqda `401` + `ACCOUNT_BLOCKED` qaytarılır. Maksimum gecikmə L1 TTL-ə (5 s) bərabərdir |
 | SEC-AUTH-07 Birdəfəlik tokenlər | BuildingBlocks.Security: `SecureTokenGenerator` | `RandomNumberGenerator.GetBytes(32)` → base64url. DB-də SHA-256 hash-i saxlanılır, `CryptographicOperations.FixedTimeEquals` istifadə olunur. `one_time_tokens(purpose, user_id, token_hash, expires_at, used_at)`. Yeni token yaradılanda eyni purpose üzrə köhnələri ləğv edilir |
 | SEC-AUTH-08 Enumeration | Identity handler-ləri | Register, resend-confirmation və forgot-password həmişə `202` qaytarır. Uzun işlər (email) outbox ilə asinxron getdiyi üçün cavab müddəti bərabərləşir. Login-də istifadəçi tapılmadıqda dummy hash yoxlanılır. `EMAIL_NOT_CONFIRMED`, `ACCOUNT_BLOCKED` və `ACCOUNT_LOCKED_OUT` yalnız şifrə düzgün olduqda qaytarılır |
 | SEC-AUTHZ-01 Rol yoxlaması | Host: `AuthorizationOptions` | `FallbackPolicy = RequireAuthenticatedUser`. Policy-lər: `User`, `Moderator`, `Admin` (rol iyerarxiyası: policy `Moderator` = rol Moderator və ya Admin). Public endpoint-lər açıq şəkildə `.AllowAnonymous()` ilə işarələnir. Arxitektura/integration testi hər endpoint-in ya policy-si, ya da `AllowAnonymous` metadata-sı olduğunu yoxlayır |
@@ -746,7 +746,7 @@ Kestrel: `AddServerHeader = false`, `MaxRequestBodySize = 64 KB` (default), şə
 | `login-ip` | IP | 10/dəq | middleware |
 | `login-email` | email hash | 5/15 dəq | handler |
 | `register` | IP | 5/saat | middleware |
-| `recovery` | IP + email hash | 10/saat IP, 3/saat email | middleware + handler |
+| `recovery` | IP + email hash | 10/saat IP, 3/saat email | middleware + handler (forgot-password, resend-confirmation; reset-password yalnız IP limiti ilə). Yanlış cari şifrə ilə şifrə dəyişmə cəhdləri ayrıca limitlə deyil, hesabın lockout sayğacı ilə məhdudlaşdırılır (SEC-AUTH-03) |
 | `refresh` | istifadəçi (refresh token-in sahibi) | 30/dəq | handler |
 | `messages` | istifadəçi | 20/dəq, 200/gün; yeni thread 30/gün | middleware (chained) |
 | `search` | Guest: IP, User: istifadəçi | 60/dəq, 120/dəq | middleware |
@@ -955,8 +955,9 @@ Lokal işə salma addımları (README-də ətraflı yazılacaq):
 1. `dotnet dev-certs https --trust`
 2. `docker compose up -d`
 3. Secret-lər: `dotnet user-secrets set "Jwt:SigningKeys:0:Key" "<random 32+ bayt base64>"` və DB parolu (README-də siyahı verilir).
-4. `dotnet run --project src/Host/AutoMarket.Api` — Development-də migration-lar avtomatik tətbiq olunur, soraqçalar üçün seed data yüklənir, ilk Admin istifadəçisi konfiqurasiyadan yaradılır (yalnız Development).
-5. API: `https://localhost:8443/scalar` (OpenAPI UI), Mailpit: `http://localhost:8025`, RabbitMQ: `http://localhost:15672`, Seq: `http://localhost:5341`.
+4. `dotnet run --project src/Host/AutoMarket.Api` — Development-də migration-lar avtomatik tətbiq olunur, soraqçalar üçün seed data yüklənir.
+5. İlk Admin bütün mühitlərdə birdəfəlik CLI əmri ilə yaradılır: `dotnet run --project src/Host/AutoMarket.Api -- bootstrap-admin --email <email> [--name <ad>]`. HTTP endpoint-i yoxdur, kodda və konfiqurasiya fayllarında parol yoxdur. Şifrə arqumentdən oxunmur: `BootstrapAdmin:Password` (env var `AutoMarket__BootstrapAdmin__Password`) və ya stdin (ekranda göstərilmir). Sistemdə aktiv Admin varsa əmr rədd olunur (R-05). Şifrə SEC-AUTH-01 ilə yoxlanılır, hadisə audit olunur (`admin.bootstrapped`). Email mövcud aktiv hesaba aiddirsə, ona Admin rolu verilir, yoxdursa təsdiqlənmiş yeni hesab yaradılır (2026-10-06, mərhələ 3b).
+6. API: `https://localhost:8443/scalar` (OpenAPI UI), Mailpit: `http://localhost:8025`, RabbitMQ: `http://localhost:15672`, Seq: `http://localhost:5341`.
 
 Lokal fayl storage `./.data/media` qovluğundadır (gitignored).
 

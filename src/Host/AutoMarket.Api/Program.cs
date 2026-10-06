@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using AutoMarket.Api.Cli;
 using AutoMarket.Api.Configuration;
 using AutoMarket.Api.HealthChecks;
 using AutoMarket.Api.Logging;
@@ -76,6 +77,12 @@ if (app.Environment.IsDevelopment() && app.Configuration.GetValue("Database:Migr
     }
 }
 
+// ARCHITECTURE §11: birdəfəlik CLI əmri — HTTP server işə düşmür
+if (BootstrapAdminCli.IsRequested(args))
+{
+    return await BootstrapAdminCli.RunAsync(app.Services, app.Configuration, args, CancellationToken.None);
+}
+
 // Middleware sırası ARCHITECTURE §7.1-ə uyğundur. HSTS/HTTPS redirection və security header-lər sonrakı mərhələdədir
 app.UseForwardedHeaders();
 app.UseExceptionHandler();
@@ -85,6 +92,7 @@ app.UseAutoMarketRequestLogging();
 app.UseRouting();
 app.UseCors();
 app.UseAuthentication();
+app.UseUserStatusCheck();
 app.UseAuthorization();
 app.UseRateLimiter();
 
@@ -112,3 +120,4 @@ app.MapGet("/ping", () => TypedResults.Ok("pong"))
     .AllowAnonymous();
 
 await app.RunAsync();
+return 0;

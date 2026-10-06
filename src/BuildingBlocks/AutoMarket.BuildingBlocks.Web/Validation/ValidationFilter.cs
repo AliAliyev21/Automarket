@@ -11,7 +11,7 @@ namespace AutoMarket.BuildingBlocks.Web.Validation;
 public sealed class ValidationFilter<TRequest>(IValidator<TRequest> validator) : IEndpointFilter
     where TRequest : class
 {
-    public const string ErrorsKey = "errors";
+    public const string ErrorsKey = ProblemDetailsSetup.ErrorsKey;
 
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {

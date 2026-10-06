@@ -41,4 +41,38 @@ internal sealed class UserRepository(IdentityDbContext db, UserManager<User> use
                orderby role.Name
                select role.Name!)
             .ToListAsync(cancellationToken);
+
+    public async Task<bool> AddRoleAsync(Guid userId, string role, CancellationToken cancellationToken)
+    {
+        var roleId = RoleSeed.IdOf(role);
+        if (await db.UserRoles.AnyAsync(userRole => userRole.UserId == userId && userRole.RoleId == roleId, cancellationToken))
+        {
+            return false;
+        }
+
+        db.UserRoles.Add(new IdentityUserRole<Guid> { UserId = userId, RoleId = roleId });
+        return true;
+    }
+
+    public async Task<bool> RemoveRoleAsync(Guid userId, string role, CancellationToken cancellationToken)
+    {
+        var roleId = RoleSeed.IdOf(role);
+        var userRole = await db.UserRoles.FirstOrDefaultAsync(
+            candidate => candidate.UserId == userId && candidate.RoleId == roleId,
+            cancellationToken);
+        if (userRole is null)
+        {
+            return false;
+        }
+
+        db.UserRoles.Remove(userRole);
+        return true;
+    }
+
+    public Task<bool> AnyActiveAdminAsync(CancellationToken cancellationToken) =>
+        (from userRole in db.UserRoles
+         join user in db.Users on userRole.UserId equals user.Id
+         where userRole.RoleId == RoleSeed.AdminRoleId && user.Status == UserStatus.Active
+         select user.Id)
+            .AnyAsync(cancellationToken);
 }
